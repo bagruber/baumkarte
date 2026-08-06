@@ -74,7 +74,7 @@ export function TreeMap({ minHeight }: { minHeight: number }) {
         fitBoundsOptions: {
           padding: wide
             ? { top: 24, right: 24, bottom: 24, left: 340 }
-            : { top: 24, right: 24, bottom: 200, left: 24 },
+            : { top: 24, right: 24, bottom: 310, left: 24 },
         },
         minZoom: 8,
         maxZoom: 19,
@@ -92,7 +92,9 @@ export function TreeMap({ minHeight }: { minHeight: number }) {
           positionOptions: { enableHighAccuracy: true },
         }),
       );
-      map.addControl(new maplibregl.ScaleControl(), "bottom-right");
+      // mobil deckt der Randblock die untere Kante ab, dort waere der
+      // Massstab verdeckt
+      map.addControl(new maplibregl.ScaleControl(), wide ? "bottom-right" : "top-left");
 
       map.on("load", () => {
         if (!map) return;

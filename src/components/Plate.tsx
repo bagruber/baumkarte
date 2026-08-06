@@ -17,7 +17,7 @@ export function Plate({
   const maskPercent = ((minHeight - HEIGHT_MIN) / (HEIGHT_MAX - HEIGHT_MIN)) * 100;
 
   return (
-    <section className="absolute inset-x-2 bottom-8 z-10 max-h-[72dvh] overflow-y-auto border border-ink-frame bg-cream px-3.5 py-3 shadow-plate sm:inset-x-auto sm:bottom-auto sm:left-4 sm:top-4 sm:w-[19.5rem] sm:px-4 sm:py-4">
+    <section className="absolute inset-x-0 bottom-0 z-10 max-h-[72dvh] overflow-y-auto border-t border-ink-frame bg-cream px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-2px_10px_rgb(28_28_28/0.13)] sm:inset-x-auto sm:bottom-auto sm:left-4 sm:top-4 sm:w-[19.5rem] sm:border sm:px-4 sm:pt-4 sm:pb-4 sm:shadow-plate">
       <h1 className="headline text-[1.3rem] sm:text-[1.5rem]">Baumkarte</h1>
       <p className="mt-1 text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-gold-700">
         Moosburg an der Isar bis Landshut

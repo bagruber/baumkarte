@@ -186,9 +186,13 @@ Regeln dieses Konzepts:
 - **Quellenvermerk steht fest im Randblock**, MapLibres Attribution-Overlay
   ist deshalb abgeschaltet (`attributionControl: false`) — es lief mobil
   über den Bildrand hinaus.
-- Layout: mobil unten angeschlagen (`inset-x-2 bottom-8`), ab `sm` als
-  Block oben links (`w-[19.5rem]`); `fitBounds` bekommt dafür asymmetrisches
-  Padding, damit der Block keine Daten verdeckt.
+- Layout: mobil als **bündiges Bottom-Sheet** an der Unterkante
+  (`inset-x-0 bottom-0`, nur `border-t`, Schatten nach oben,
+  `env(safe-area-inset-bottom)` im Padding — `viewport-fit=cover` steht
+  dafür in der `index.html`), ab `sm` als Block oben links
+  (`w-[19.5rem]`, volle Umrandung). `fitBounds` bekommt asymmetrisches
+  Padding, damit der Block keine Daten verdeckt; der Maßstab wandert mobil
+  nach oben links, weil unten der Randblock sitzt.
 - **Kein Logo.** Bewusst entfernt; das Favicon ist die Höhenskala als
   fünfstufiger Balken (`public/favicon.svg`), keine Bildmarke.
 

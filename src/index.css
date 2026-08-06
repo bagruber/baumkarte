@@ -122,7 +122,6 @@ body {
 .maplibregl-ctrl-scale {
   background: var(--color-cream);
   border: 1px solid var(--color-ink-frame);
-  border-top: none;
   border-radius: 0;
   color: var(--color-ink-soft);
   font-family: var(--font-sans);
