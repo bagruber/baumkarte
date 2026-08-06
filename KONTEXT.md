@@ -162,8 +162,35 @@ Basiskarte):
 ```
 
 Zweitkodierung: Punktradius wächst ab z14 leicht mit der Baumhöhe.
-UI-Muster: Legende als Gradient-Card unten links, Info-Panel als Bottom-Sheet
-(mobil) bzw. Modal (Desktop), Popup im Cream-Stil.
+
+**UI-Konzept „Kartenblatt" (seit 12.07.2026, 5. Runde).** Das Interface ist
+*ein* Randblock eines gedruckten Kartenblatts, als Papier auf die Karte
+gelegt — kein App-Header, keine schwebenden Dashboard-Cards, kein Modal.
+Alles steckt in `components/Plate.tsx`: Titel, Untertitel, Anzahl,
+Höhenskala, Mindesthöhen-Regler, ausklappbare Erläuterung, Quellenvermerk.
+Regeln dieses Konzepts:
+
+- **Papier, nicht Glas**: deckendes Cream, 1px Haarlinie (`--color-ink-frame`
+  außen, `--color-ink-line` innen), **eckige Ecken**, ein weicher Schatten
+  mit Versatz (`--shadow-plate`). Kein `backdrop-blur`, keine `rounded-lg`.
+- **Typografie trägt**: Playfair-Titel, letterspaced Versalien für Labels
+  (`.label`), Tabellenziffern für alle Zahlen.
+- **Instrument statt Widget**: Regler = 2px-Lineal mit schmalem Schieber
+  (`.rule-slider`), MapLibre-Controls/Popup auf dasselbe Papier getrimmt.
+- **Legende zeigt den Zustand**: bei aktivem Filter wird der ausgeblendete
+  Teil der Farbskala mit Cream überdeckt — Skala und Regler sind ein Gerät,
+  nicht zwei Widgets.
+- **Blattschnitt**: gestrichelte Haarlinie in Gold-Braun um das
+  Projektgebiet, damit die harte Kante der Punktwolke als Datengrenze
+  lesbar ist und nicht als Fehler.
+- **Quellenvermerk steht fest im Randblock**, MapLibres Attribution-Overlay
+  ist deshalb abgeschaltet (`attributionControl: false`) — es lief mobil
+  über den Bildrand hinaus.
+- Layout: mobil unten angeschlagen (`inset-x-2 bottom-8`), ab `sm` als
+  Block oben links (`w-[19.5rem]`); `fitBounds` bekommt dafür asymmetrisches
+  Padding, damit der Block keine Daten verdeckt.
+- **Kein Logo.** Bewusst entfernt; das Favicon ist die Höhenskala als
+  fünfstufiger Balken (`public/favicon.svg`), keine Bildmarke.
 
 **README-Konvention:** Live-Link oben, Hinweisbox „private Eigenentwicklung,
 nicht offiziell durch die Stadt beauftragt", Stack-Abschnitt,
@@ -178,8 +205,27 @@ Geschwister-Apps-Abschnitt, Verantwortlicher: Benedict Arya Gruber.
    eine PMTiles-Datei + Gebietswahl. PMTiles-Größe und Git-Historie im Blick
    behalten (aktuell 52 MB, Warnschwelle 50 MB, Limit 100 MB → ggf. Releases
    oder externes Hosting statt Git).
-2. **Lokale, ausführlichere Katasterdaten** (kommunales Baumkataster: Arten,
-   Pflanzjahr, Pflege) als zweite Ebene/Quelle.
+2. **Lokale, ausführlichere Katasterdaten** (kommunales Baumkataster) als
+   zweite, zuschaltbare Detail-Ebene (nicht mit den LDBV-Punkten mischen —
+   andere Größenordnung: Kataster deckt nur Moosburg ab, vermutlich wenige
+   tausend Bäume statt Millionen). Format-/Attribut-Anforderungen für die
+   Anfrage an die Stadt (Stand 12.07.2026, ungeprüft):
+   - **Format**: praktisch egal — GeoPackage/GeoJSON ideal, Shapefile sehr
+     gut (Achtung: DBF-Feldnamen auf 10 Zeichen gekappt, Encoding oft
+     Windows-1252/Umlaute, `.prj` prüfen), CSV/Excel nur mit explizit
+     benanntem Koordinatensystem, WFS falls Geoportal vorhanden (dann eher
+     einmaliger Export als Live-Kopplung). Alle mit `pyogrio`/GDAL lesbar
+     (bereits installiert, s. o.) — der SQLite-Direktzugriff aus der
+     LDBV-Pipeline ist ein Sonderfall, kein Vorbild für den generischen Fall.
+   - **CRS explizit prüfen**: ältere Kommunaldaten oft noch Gauß-Krüger
+     (EPSG:31468), nicht UTM32 wie die LDBV-Daten — nicht blind annehmen.
+   - **Attribute, Muss**: Baumart (botanisch + deutsch), eindeutige Baum-ID.
+   - **Attribute, wünschenswert**: Pflanzjahr/Alter, Stammumfang/BHD,
+     Standorttyp (Straßen-/Parkbaum, Naturdenkmal …), Kronendurchmesser.
+   - **Attribute, vor Veröffentlichung mit der Stadt klären**: Zustand/
+     Vitalität/Schadstufe (wirkt sonst wie Gefahrenkarte), geplante
+     Pflegemaßnahmen (eindeutig intern), Eigentümer bei privaten Bäumen
+     (dann eher ganz rausfiltern, nur öffentliche Bäume zeigen).
 3. Die Baumzahl 2.868.813 ist in App/README hart codiert — bei
    Daten-Updates mitziehen (steht im ETL-Log).
 
@@ -187,6 +233,16 @@ Geschwister-Apps-Abschnitt, Verantwortlicher: Benedict Arya Gruber.
 
 ## Changelog
 
+- **12.07.2026 (5)** — Interface auf das Kartenblatt-Konzept umgebaut
+  (siehe Abschnitt 4): Header und Logo entfernt, Legende + Regler + Info
+  zu *einer* Platte zusammengezogen (`Plate.tsx` ersetzt `Legend.tsx` und
+  `InfoPanel.tsx`), Blattschnitt-Linie, Attribution in den Randblock geholt.
+  Popup **erstmals wirklich verifiziert** (Klick-Raster über Waldstück —
+  Canvas-Pixel lassen sich hier nicht auslesen, `drawImage` auf dem
+  WebGL-Canvas liefert nichts Brauchbares).
+- **12.07.2026 (4)** — Format-/Attribut-Anforderungen für ein künftiges
+  kommunales Baumkataster ausgearbeitet (Abschnitt 5.2) — noch keine
+  Daten vorhanden, nur Vorbereitung für die Anfrage an die Stadt.
 - **12.07.2026 (3)** — Mindesthöhen-Slider in der Legenden-Card
   (`map.setFilter` auf `h`), im Browser verifiziert. Erster Commit + Push.
 - **12.07.2026 (2)** — App komplett gebaut und end-to-end verifiziert

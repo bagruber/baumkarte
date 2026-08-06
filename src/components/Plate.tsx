@@ -1,0 +1,142 @@
+import { useState } from "react";
+import { HEIGHT_MAX, HEIGHT_MIN, HEIGHT_STOPS, rampGradient } from "@/lib/ramp";
+
+const TREE_COUNT = 2_868_813;
+const FILTER_MAX = 40;
+
+/** Randblock des Kartenblatts: Titel, Hoehenskala, Regler, Quellenvermerk. */
+export function Plate({
+  minHeight,
+  onMinHeightChange,
+}: {
+  minHeight: number;
+  onMinHeightChange: (v: number) => void;
+}) {
+  const [notesOpen, setNotesOpen] = useState(false);
+  const filtered = minHeight > HEIGHT_MIN;
+  const maskPercent = ((minHeight - HEIGHT_MIN) / (HEIGHT_MAX - HEIGHT_MIN)) * 100;
+
+  return (
+    <section className="absolute inset-x-2 bottom-8 z-10 max-h-[72dvh] overflow-y-auto border border-ink-frame bg-cream px-3.5 py-3 shadow-plate sm:inset-x-auto sm:bottom-auto sm:left-4 sm:top-4 sm:w-[19.5rem] sm:px-4 sm:py-4">
+      <h1 className="headline text-[1.3rem] sm:text-[1.5rem]">Baumkarte</h1>
+      <p className="mt-1 text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-gold-700">
+        Moosburg an der Isar bis Landshut
+      </p>
+      <p className="mt-1.5 text-[0.75rem] tabular-nums text-ink-soft">
+        {TREE_COUNT.toLocaleString("de-DE")} Einzelbäume
+      </p>
+
+      <hr className="my-3 border-ink-line" />
+
+      <p className="label">Baumhöhe in Meter</p>
+      <div
+        className="relative mt-1.5 h-2 border border-ink-line"
+        style={{ background: rampGradient }}
+        role="img"
+        aria-label={`Farbskala von ${HEIGHT_MIN} bis ${HEIGHT_MAX} Meter Baumhöhe`}
+      >
+        {filtered && (
+          <div
+            className="absolute inset-y-0 left-0 bg-cream/85"
+            style={{ width: `${maskPercent}%` }}
+          />
+        )}
+      </div>
+      <div className="mt-1 flex justify-between text-[0.62rem] tabular-nums text-ink-muted">
+        {HEIGHT_STOPS.map(([h]) => (
+          <span key={h}>{h}</span>
+        ))}
+      </div>
+
+      <div className="mt-3.5 flex items-baseline justify-between gap-2">
+        <label htmlFor="min-height" className="label">
+          Mindesthöhe
+        </label>
+        <span className="text-[0.8rem] font-semibold tabular-nums text-ink">
+          {filtered ? `ab ${minHeight} m` : "alle Bäume"}
+        </span>
+      </div>
+      <input
+        id="min-height"
+        type="range"
+        className="rule-slider mt-1"
+        min={HEIGHT_MIN}
+        max={FILTER_MAX}
+        step={1}
+        value={minHeight}
+        onChange={(e) => onMinHeightChange(Number(e.target.value))}
+      />
+
+      <hr className="mt-2.5 border-ink-line" />
+
+      <button
+        onClick={() => setNotesOpen(!notesOpen)}
+        aria-expanded={notesOpen}
+        className="flex w-full items-center justify-between gap-2 pt-2.5 text-left text-[0.72rem] font-semibold text-ink-soft hover:text-ink"
+      >
+        Über die Daten
+        <svg
+          width="9"
+          height="6"
+          viewBox="0 0 9 6"
+          fill="none"
+          aria-hidden
+          className={notesOpen ? "rotate-180" : ""}
+        >
+          <path
+            d="M1 1.5 4.5 5 8 1.5"
+            stroke="currentColor"
+            strokeWidth="1.3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+
+      {notesOpen && (
+        <div className="mt-2 space-y-2 text-[0.75rem] leading-relaxed text-ink-soft">
+          <p>
+            Jeder Punkt ist ein Baum. Die Farbe zeigt seine Höhe, ein Tippen die
+            Werte im Detail.
+          </p>
+          <p>
+            Die Standorte stammen aus dem Datensatz{" "}
+            <a
+              href="https://geodaten.bayern.de/opengeodata/OpenDataDetail.html?pn=einzelbaeume"
+              target="_blank"
+              rel="noreferrer"
+              className="font-semibold text-red-700 underline decoration-ink-line underline-offset-2 hover:decoration-red-700"
+            >
+              Einzelbäume
+            </a>{" "}
+            der Bayerischen Vermessungsverwaltung, Projektgebiet 124018. Sie
+            werden automatisch aus Oberflächenmodell und Luftbildern abgeleitet
+            — daher Standort und Höhe, aber keine Baumarten. Bäume unter
+            5&thinsp;m fehlen, in dichten Wäldern zählt die Auswertung Kronen
+            statt Stämme.
+          </p>
+          <p>
+            In kleinen Zoomstufen bleibt je Rasterzelle nur der höchste Baum
+            sichtbar. Beim Hineinzoomen erscheinen alle.
+          </p>
+          <p className="text-[0.7rem] text-ink-muted">
+            Private Eigenentwicklung, kein Angebot der Stadt. Kein Tracking.{" "}
+            <a
+              href="https://github.com/bagruber/baumkarte/issues"
+              target="_blank"
+              rel="noreferrer"
+              className="font-semibold text-red-700 underline decoration-ink-line underline-offset-2 hover:decoration-red-700"
+            >
+              Feedback
+            </a>
+          </p>
+        </div>
+      )}
+
+      <p className="mt-2.5 text-[0.62rem] leading-snug text-ink-muted">
+        Bäume: Bayerische Vermessungsverwaltung (CC&nbsp;BY&nbsp;4.0) · Karte:
+        basemap.de / BKG
+      </p>
+    </section>
+  );
+}

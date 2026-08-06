@@ -65,18 +65,25 @@ export function TreeMap({ minHeight }: { minHeight: number }) {
         .catch(() => FALLBACK_STYLE);
       if (cancelled || !container.current) return;
 
+      // Startausschnitt so einpassen, dass der Randblock keine Daten verdeckt
+      const wide = window.innerWidth >= 640;
       map = new maplibregl.Map({
         container: container.current,
         style,
         bounds: DATA_BOUNDS,
-        fitBoundsOptions: { padding: 16 },
+        fitBoundsOptions: {
+          padding: wide
+            ? { top: 24, right: 24, bottom: 24, left: 340 }
+            : { top: 24, right: 24, bottom: 200, left: 24 },
+        },
         minZoom: 8,
         maxZoom: 19,
         maxBounds: [
           [11.65, 48.35],
           [12.48, 48.73],
         ],
-        attributionControl: { compact: true },
+        // Quellenvermerk steht fest im Randblock (Plate), nicht als Overlay
+        attributionControl: false,
       });
       mapRef.current = map;
       map.addControl(new maplibregl.NavigationControl({ showCompass: false }));
@@ -92,8 +99,38 @@ export function TreeMap({ minHeight }: { minHeight: number }) {
         map.addSource("baeume", {
           type: "vector",
           url: `pmtiles://${new URL(`${import.meta.env.BASE_URL}data/baeume.pmtiles`, window.location.href).href}`,
-          attribution: "Bäume: Bayerische Vermessungsverwaltung",
         });
+        // Blattschnitt: Kante des Projektgebiets, damit der abrupte Rand der
+        // Punktwolke als Datengrenze lesbar wird und nicht als Fehler
+        const [[w, s], [e, n]] = DATA_BOUNDS;
+        map.addSource("extent", {
+          type: "geojson",
+          data: {
+            type: "Feature",
+            properties: {},
+            geometry: {
+              type: "LineString",
+              coordinates: [
+                [w, s],
+                [e, s],
+                [e, n],
+                [w, n],
+                [w, s],
+              ],
+            },
+          },
+        });
+        map.addLayer({
+          id: "extent",
+          type: "line",
+          source: "extent",
+          paint: {
+            "line-color": "#968b69",
+            "line-width": 1,
+            "line-dasharray": [5, 4],
+          },
+        });
+
         const initialFilter = heightFilter(minHeightRef.current);
         map.addLayer({
           id: "trees",
@@ -145,8 +182,11 @@ export function TreeMap({ minHeight }: { minHeight: number }) {
           new maplibregl.Popup({ closeButton: false, offset: 10, maxWidth: "240px" })
             .setLngLat(f.geometry.coordinates as [number, number])
             .setHTML(
-              `<strong style="font-size:0.95rem">${h.toLocaleString("de-DE", { maximumFractionDigits: 1 })}&thinsp;m hoch</strong>` +
-                `<br><span style="color:#6f6b63">Standort ${Math.round(g).toLocaleString("de-DE")}&thinsp;m ü. NHN</span>`,
+              `<div style="font-variant-numeric:tabular-nums">` +
+                `<div style="font-size:1.05rem;font-weight:600;line-height:1.15">${h.toLocaleString("de-DE", { maximumFractionDigits: 1 })}&thinsp;m</div>` +
+                `<div style="font-size:0.6rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#6f6b63;margin-top:2px">Baumhöhe</div>` +
+                `<div style="margin-top:6px;padding-top:5px;border-top:1px solid #e4e0d7;font-size:0.72rem;color:#555555">Gelände ${Math.round(g).toLocaleString("de-DE")}&thinsp;m ü.&thinsp;NHN</div>` +
+                `</div>`,
             )
             .addTo(map);
         });
