@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import type { StyleSpecification } from "maplibre-gl";
 import { Protocol } from "pmtiles";
@@ -44,6 +44,7 @@ function heightFilter(minHeight: number) {
 export function TreeMap({ minHeight }: { minHeight: number }) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const [loaded, setLoaded] = useState(false);
   const minHeightRef = useRef(minHeight);
   minHeightRef.current = minHeight;
 
@@ -86,6 +87,9 @@ export function TreeMap({ minHeight }: { minHeight: number }) {
         attributionControl: false,
       });
       mapRef.current = map;
+      map.once("idle", () => {
+        if (!cancelled) setLoaded(true);
+      });
       map.addControl(new maplibregl.NavigationControl({ showCompass: false }));
       map.addControl(
         new maplibregl.GeolocateControl({
@@ -214,6 +218,15 @@ export function TreeMap({ minHeight }: { minHeight: number }) {
   return (
     <div className="absolute inset-0">
       <div ref={container} className="h-full w-full" aria-label="Karte der Einzelbäume" />
+      {!loaded && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="pointer-events-none absolute inset-0 grid place-items-center"
+        >
+          <p className="eyebrow text-red-700">Karte wird geladen …</p>
+        </div>
+      )}
     </div>
   );
 }

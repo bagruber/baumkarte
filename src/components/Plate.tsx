@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { RainbowStripe } from "./RainbowStripe";
 import { HEIGHT_MAX, HEIGHT_MIN, HEIGHT_STOPS, rampGradient } from "@/lib/ramp";
 
 const TREE_COUNT = 2_868_813;
@@ -17,18 +18,16 @@ export function Plate({
   const maskPercent = ((minHeight - HEIGHT_MIN) / (HEIGHT_MAX - HEIGHT_MIN)) * 100;
 
   return (
-    <section className="absolute inset-x-0 bottom-0 z-10 max-h-[72dvh] overflow-y-auto border-t border-ink-frame bg-cream px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-2px_10px_rgb(28_28_28/0.13)] sm:inset-x-auto sm:bottom-auto sm:left-4 sm:top-4 sm:w-[19.5rem] sm:border sm:px-4 sm:pt-4 sm:pb-4 sm:shadow-plate">
-      <h1 className="headline text-[1.3rem] sm:text-[1.5rem]">Baumkarte</h1>
-      <p className="mt-1 text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-gold-700">
-        Moosburg an der Isar bis Landshut
-      </p>
-      <p className="mt-1.5 text-[0.75rem] tabular-nums text-ink-soft">
+    <section className="absolute inset-x-0 bottom-0 z-10 max-h-[72dvh] overflow-y-auto rounded-t-sm border-t border-ink-frame bg-cream px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-2px_12px_rgb(0_0_0/0.07)] sm:inset-x-auto sm:bottom-auto sm:left-4 sm:top-4 sm:w-[19.5rem] sm:rounded-sm sm:border sm:px-4 sm:pt-4 sm:pb-4 sm:shadow-soft">
+      <p className="eyebrow text-red-700">Moosburg an der Isar bis Landshut</p>
+      <h1 className="headline mt-1 text-[1.35rem] sm:text-[1.5rem]">Baumkarte</h1>
+      <p className="mt-1.5 mb-3 text-[0.75rem] tabular-nums text-ink-soft">
         {TREE_COUNT.toLocaleString("de-DE")} Einzelbäume
       </p>
 
-      <hr className="my-3 border-ink-line" />
+      <RainbowStripe className="-mx-4" />
 
-      <p className="label">Baumhöhe in Meter</p>
+      <p className="label mt-3">Baumhöhe in Meter</p>
       <div
         className="relative mt-1.5 h-2 border border-ink-line"
         style={{ background: rampGradient }}
@@ -74,7 +73,7 @@ export function Plate({
         aria-expanded={notesOpen}
         className="flex w-full items-center justify-between gap-2 pt-2.5 text-left text-[0.72rem] font-semibold text-ink-soft hover:text-ink"
       >
-        Über die Daten
+        Woher die Daten kommen
         <svg
           width="9"
           height="6"
@@ -96,11 +95,11 @@ export function Plate({
       {notesOpen && (
         <div className="mt-2 space-y-2 text-[0.75rem] leading-relaxed text-ink-soft">
           <p>
-            Jeder Punkt ist ein Baum. Die Farbe zeigt seine Höhe, ein Tippen die
-            Werte im Detail.
+            Jeder Punkt ist ein Baum. Die Farbe steht für seine Höhe, Antippen
+            zeigt die Zahlen.
           </p>
           <p>
-            Die Standorte stammen aus dem Datensatz{" "}
+            Die Standorte kommen aus dem Datensatz{" "}
             <a
               href="https://geodaten.bayern.de/opengeodata/OpenDataDetail.html?pn=einzelbaeume"
               target="_blank"
@@ -109,15 +108,15 @@ export function Plate({
             >
               Einzelbäume
             </a>{" "}
-            der Bayerischen Vermessungsverwaltung, Projektgebiet 124018. Sie
-            werden automatisch aus Oberflächenmodell und Luftbildern abgeleitet
-            — daher Standort und Höhe, aber keine Baumarten. Bäume unter
-            5&thinsp;m fehlen, in dichten Wäldern zählt die Auswertung Kronen
-            statt Stämme.
+            der Bayerischen Vermessungsverwaltung, Projektgebiet 124018. Ein
+            Rechner leitet sie aus Oberflächenmodell und Luftbildern ab. Deshalb
+            kennt die Karte Standort und Höhe, aber keine Baumarten. Bäume unter
+            5&thinsp;m fehlen, und in dichten Wäldern zählt die Auswertung
+            Kronen, nicht Stämme.
           </p>
           <p>
-            In kleinen Zoomstufen bleibt je Rasterzelle nur der höchste Baum
-            sichtbar. Beim Hineinzoomen erscheinen alle.
+            Weit herausgezoomt bleibt je Rasterzelle nur der höchste Baum
+            stehen. Wer hineinzoomt, sieht alle.
           </p>
           <p className="text-[0.7rem] text-ink-muted">
             Private Eigenentwicklung, kein Angebot der Stadt. Kein Tracking.{" "}

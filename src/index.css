@@ -13,6 +13,17 @@
   --color-gold-600: #968b69;
   --color-gold-700: #6e5a30;
 
+  /* Regenbogenleiste — feste Reihenfolge, nur als Leiste, nie als Verlauf */
+  --color-rb-1: #e91e8c;
+  --color-rb-2: #e5202e;
+  --color-rb-3: #f4830a;
+  --color-rb-4: #f5d400;
+  --color-rb-5: #0a9e4c;
+  --color-rb-6: #009ac7;
+  --color-rb-7: #3b3f9a;
+  --color-rb-8: #8b4a2a;
+  --color-rb-9: #1a1a1a;
+
   --color-cream: #faf7f2;
   --color-cream-dark: #f1ece1;
 
@@ -29,7 +40,9 @@
   --font-display: "Playfair Display", ui-serif, Georgia, serif;
   --font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif;
 
-  --shadow-plate: 0 2px 10px rgb(28 28 28 / 0.13);
+  --radius-sm: 2px;
+  --shadow-soft: 0 2px 12px rgb(0 0 0 / 0.07);
+  --shadow-lift: 0 4px 24px rgb(0 0 0 / 0.1);
 }
 
 body {
@@ -37,16 +50,28 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  font-feature-settings: "ss01", "cv11";
 }
 
+/* Versal-Playfair wie in den Geschwisterprojekten */
 .headline {
   font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
   font-weight: 700;
-  letter-spacing: -0.01em;
   line-height: 1.05;
 }
 
-/* Kartografische Kleinschrift: Beschriftungen im Kartenblatt-Randblock */
+/* Kicker ueber der Headline, Familiensatz */
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 600;
+  font-size: 0.7rem;
+}
+
+/* Beschriftung an einem Messwert. Bewusst kleiner und grau statt farbig:
+   der Kicker benennt die Karte, das Label benennt ein Instrument. */
 .label {
   text-transform: uppercase;
   letter-spacing: 0.14em;
@@ -55,9 +80,29 @@ body {
   color: var(--color-ink-muted);
 }
 
-:focus-visible {
-  outline: 2px solid var(--color-red-600);
+/* Regenbogenleiste — 9 feste Segmente, 4px */
+.rainbow-stripe {
+  display: flex;
+  height: 4px;
+  width: 100%;
+}
+.rainbow-stripe > span {
+  flex: 1;
+}
+.rainbow-stripe > span:nth-child(1) { background: var(--color-rb-1); }
+.rainbow-stripe > span:nth-child(2) { background: var(--color-rb-2); }
+.rainbow-stripe > span:nth-child(3) { background: var(--color-rb-3); }
+.rainbow-stripe > span:nth-child(4) { background: var(--color-rb-4); }
+.rainbow-stripe > span:nth-child(5) { background: var(--color-rb-5); }
+.rainbow-stripe > span:nth-child(6) { background: var(--color-rb-6); }
+.rainbow-stripe > span:nth-child(7) { background: var(--color-rb-7); }
+.rainbow-stripe > span:nth-child(8) { background: var(--color-rb-8); }
+.rainbow-stripe > span:nth-child(9) { background: var(--color-rb-9); }
+
+:where(a, button, select, textarea):focus-visible {
+  outline: 2px solid var(--color-red-500);
   outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
 /* Hoehenregler als Messinstrument: 2px-Lineal, schmaler Schieber */
@@ -106,8 +151,8 @@ body {
 .maplibregl-ctrl-group {
   background: var(--color-cream);
   border: 1px solid var(--color-ink-frame);
-  border-radius: 0;
-  box-shadow: var(--shadow-plate);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-soft);
 }
 .maplibregl-ctrl-group button {
   width: 30px;
@@ -122,7 +167,7 @@ body {
 .maplibregl-ctrl-scale {
   background: var(--color-cream);
   border: 1px solid var(--color-ink-frame);
-  border-radius: 0;
+  border-radius: var(--radius-sm);
   color: var(--color-ink-soft);
   font-family: var(--font-sans);
   font-size: 0.65rem;
@@ -144,8 +189,8 @@ body {
   background: var(--color-cream);
   color: var(--color-ink);
   border: 1px solid var(--color-ink-frame);
-  border-radius: 0;
-  box-shadow: var(--shadow-plate);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lift);
   padding: 0.5rem 0.7rem;
 }
 .maplibregl-popup-anchor-bottom .maplibregl-popup-tip {

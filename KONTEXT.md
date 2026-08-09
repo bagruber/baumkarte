@@ -148,10 +148,34 @@ Referenz: `../datahub/src/index.css` und `../haushaltvis/src/index.css`
 --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
 ```
 
-**Muster:** Eyebrow-Labels (uppercase, letter-spacing 0.14em, gold),
-`.headline` in Playfair 700, große Basisschrift (17/18px), sanfte Schatten
-(`--shadow-soft`), sichtbarer `:focus-visible`-Ring in Rot, Skip-Link,
-`prefers-reduced-motion` respektieren. WCAG 2.1 AA als Minimum.
+**Familien-Muster, aus `/moosburg` übernommen** (dort am „truesten"):
+
+- **Identitätsblock**: `.eyebrow` (Inter, Versalien, 0.14em, **rot-700**)
+  über `.headline` — und `.headline` ist **Versal-Playfair 700**
+  (`text-transform: uppercase`, `letter-spacing: 0.01em`, `line-height:1.05`),
+  laut Brand-Brief. Darunter normaler Fließtext in `ink-soft`.
+- **Regenbogenleiste**: 9 feste Segmente, 4px, `RainbowStripe.tsx` (identisch
+  zu moosburg/datahub). Nur als Leiste, **nie als Verlauf**. Schließt in der
+  Familie den Kopfbereich ab — hier trennt sie Identitätsblock und Instrument.
+- Radien `--radius-sm: 2px` statt scharf eckig, Familien-Schatten
+  `--shadow-soft` / `--shadow-lift`, `font-feature-settings: "ss01","cv11"`
+  auf `body`, Fokusring nach moosburg-Konvention
+  (`:where(a,button,select,textarea)`, rot-500, `--radius-sm`).
+- **Zwei Beschriftungs-Rollen**, analog zu moosburgs Unterscheidung
+  eyebrow/badge: `.eyebrow` benennt die Karte (0,7rem, farbig), `.label`
+  benennt ein Instrument (0,6rem, grau). Gleich gesetzt wären beide unsichtbar.
+- **Ladezustand**: moosburgs `RoseLoader` hat hier kein Gegenstück (Wappen-
+  Rosen wären wieder eine Bildmarke), aber die Lücke war real — die Karte
+  braucht je nach Netz 5–10 s. Jetzt „Karte wird geladen …" im
+  `.eyebrow`-Satz in Rot, bis MapLibre `idle` meldet.
+
+**Bewusst nicht übernommen:** Madelon Script (in moosburg „large + sparingly,
+one per layout" für emotionale Akzente — auf einer Messwertkarte wäre das
+Dekoration), Federzeichnungen/`SketchGround` (falsches Register für amtliche
+Geodaten), `.reveal`-Scroll-Animationen (es wird nicht gescrollt).
+
+Weiterhin: große Basisschrift, `prefers-reduced-motion` respektieren,
+WCAG 2.1 AA als Minimum.
 
 **Für die Baumkarte spezifisch — Grün-Rampe** (definiert in `src/lib/ramp.ts`,
 sequenziell, ein Farbton, hell→dunkel, Startwert ≥3:1 Kontrast auf heller
@@ -237,6 +261,14 @@ Geschwister-Apps-Abschnitt, Verantwortlicher: Benedict Arya Gruber.
 
 ## Changelog
 
+- **07.08.2026** — Familien-Elemente aus `/moosburg` nachgezogen (Details in
+  Abschnitt 4): Versal-Playfair-Headline, roter Eyebrow darüber,
+  Regenbogenleiste, Familien-Radien/-Schatten, Fokusring-Konvention,
+  Ladehinweis. Texte auf LLM-Tells durchgesehen: Gedankenstrich-Appositionen
+  („… abgeleitet — daher Standort und Höhe") und Ellipsen ohne Verb
+  („ein Tippen die Werte im Detail") raus, dafür kurze Hauptsätze;
+  Aufklapper heißt jetzt „Woher die Daten kommen" statt „Über die Daten".
+  Randblock mobil bündig an der Unterkante.
 - **12.07.2026 (5)** — Interface auf das Kartenblatt-Konzept umgebaut
   (siehe Abschnitt 4): Header und Logo entfernt, Legende + Regler + Info
   zu *einer* Platte zusammengezogen (`Plate.tsx` ersetzt `Legend.tsx` und
