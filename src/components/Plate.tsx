@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { RainbowStripe } from "./RainbowStripe";
 import { HEIGHT_MAX, HEIGHT_MIN, HEIGHT_STOPS, rampGradient } from "@/lib/ramp";
 
 const TREE_COUNT = 2_868_813;
@@ -25,7 +24,8 @@ export function Plate({
         {TREE_COUNT.toLocaleString("de-DE")} Einzelbäume
       </p>
 
-      <RainbowStripe className="-mx-4" />
+      {/* Goldregel als Blattkante — greift die Blattschnitt-Linie der Karte auf */}
+      <div className="-mx-4 h-[2px] bg-gold-500" />
 
       <p className="label mt-3">Baumhöhe in Meter</p>
       <div

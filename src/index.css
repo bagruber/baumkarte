@@ -13,17 +13,6 @@
   --color-gold-600: #968b69;
   --color-gold-700: #6e5a30;
 
-  /* Regenbogenleiste — feste Reihenfolge, nur als Leiste, nie als Verlauf */
-  --color-rb-1: #e91e8c;
-  --color-rb-2: #e5202e;
-  --color-rb-3: #f4830a;
-  --color-rb-4: #f5d400;
-  --color-rb-5: #0a9e4c;
-  --color-rb-6: #009ac7;
-  --color-rb-7: #3b3f9a;
-  --color-rb-8: #8b4a2a;
-  --color-rb-9: #1a1a1a;
-
   --color-cream: #faf7f2;
   --color-cream-dark: #f1ece1;
 
@@ -79,25 +68,6 @@ body {
   font-size: 0.6rem;
   color: var(--color-ink-muted);
 }
-
-/* Regenbogenleiste — 9 feste Segmente, 4px */
-.rainbow-stripe {
-  display: flex;
-  height: 4px;
-  width: 100%;
-}
-.rainbow-stripe > span {
-  flex: 1;
-}
-.rainbow-stripe > span:nth-child(1) { background: var(--color-rb-1); }
-.rainbow-stripe > span:nth-child(2) { background: var(--color-rb-2); }
-.rainbow-stripe > span:nth-child(3) { background: var(--color-rb-3); }
-.rainbow-stripe > span:nth-child(4) { background: var(--color-rb-4); }
-.rainbow-stripe > span:nth-child(5) { background: var(--color-rb-5); }
-.rainbow-stripe > span:nth-child(6) { background: var(--color-rb-6); }
-.rainbow-stripe > span:nth-child(7) { background: var(--color-rb-7); }
-.rainbow-stripe > span:nth-child(8) { background: var(--color-rb-8); }
-.rainbow-stripe > span:nth-child(9) { background: var(--color-rb-9); }
 
 :where(a, button, select, textarea):focus-visible {
   outline: 2px solid var(--color-red-500);

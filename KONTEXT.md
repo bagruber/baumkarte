@@ -154,9 +154,12 @@ Referenz: `../datahub/src/index.css` und `../haushaltvis/src/index.css`
   über `.headline` — und `.headline` ist **Versal-Playfair 700**
   (`text-transform: uppercase`, `letter-spacing: 0.01em`, `line-height:1.05`),
   laut Brand-Brief. Darunter normaler Fließtext in `ink-soft`.
-- **Regenbogenleiste**: 9 feste Segmente, 4px, `RainbowStripe.tsx` (identisch
-  zu moosburg/datahub). Nur als Leiste, **nie als Verlauf**. Schließt in der
-  Familie den Kopfbereich ab — hier trennt sie Identitätsblock und Instrument.
+- **Keine Regenbogenleiste.** In moosburg/datahub schließt sie den Kopfbereich
+  ab, hier war sie einmal drin und wurde wieder entfernt: auf einer
+  einfarbig grünen Messwertkarte wirkt sie fremd. An ihrer Stelle trennt eine
+  **2px-Goldregel** Identitäts- und Instrumentenblock — sie greift die
+  goldene Blattschnitt-Linie auf der Karte auf. Farbige Akzente in dieser
+  App nur in **Gold oder Rot**.
 - Radien `--radius-sm: 2px` statt scharf eckig, Familien-Schatten
   `--shadow-soft` / `--shadow-lift`, `font-feature-settings: "ss01","cv11"`
   auf `body`, Fokusring nach moosburg-Konvention
@@ -261,6 +264,8 @@ Geschwister-Apps-Abschnitt, Verantwortlicher: Benedict Arya Gruber.
 
 ## Changelog
 
+- **09.08.2026** — Regenbogenleiste wieder entfernt (passt nicht zu dieser
+  Anwendung), stattdessen 2px-Goldregel. Farbakzente hier nur Gold/Rot.
 - **07.08.2026** — Familien-Elemente aus `/moosburg` nachgezogen (Details in
   Abschnitt 4): Versal-Playfair-Headline, roter Eyebrow darüber,
   Regenbogenleiste, Familien-Radien/-Schatten, Fokusring-Konvention,
