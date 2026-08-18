@@ -4,7 +4,7 @@ import type { StyleSpecification } from "maplibre-gl";
 import { Protocol } from "pmtiles";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { HEIGHT_STOPS } from "@/lib/ramp";
-import { duerreColor } from "@/lib/umwelt";
+import { duerreColor, type Ausschnitt } from "@/lib/umwelt";
 
 /** Datenausdehnung des Projektgebiets 124018 (aus dem PMTiles-Header). */
 const DATA_BOUNDS: [[number, number], [number, number]] = [
@@ -46,11 +46,15 @@ export function TreeMap({
   minHeight,
   showDuerre,
   tagIndex,
+  onBoundsChange,
 }: {
   minHeight: number;
   showDuerre: boolean;
   tagIndex: number;
+  onBoundsChange: (b: Ausschnitt) => void;
 }) {
+  const boundsCb = useRef(onBoundsChange);
+  boundsCb.current = onBoundsChange;
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const showDuerreRef = useRef(showDuerre);
@@ -118,6 +122,21 @@ export function TreeMap({
       map.once("idle", () => {
         if (!cancelled) setLoaded(true);
       });
+
+      // Die Duerreanzeige folgt dem, was man sieht: beim Hineinzoomen
+      // zaehlen weniger Rasterzellen, beim Herauszoomen mehr.
+      const meldeAusschnitt = () => {
+        if (!map || cancelled) return;
+        const b = map.getBounds();
+        boundsCb.current({
+          west: b.getWest(),
+          sued: b.getSouth(),
+          ost: b.getEast(),
+          nord: b.getNorth(),
+        });
+      };
+      map.on("moveend", meldeAusschnitt);
+      map.once("load", meldeAusschnitt);
       map.addControl(new maplibregl.NavigationControl({ showCompass: false }));
       map.addControl(
         new maplibregl.GeolocateControl({

@@ -1,18 +1,30 @@
-import { KLASSEN, type Umwelt } from "@/lib/umwelt";
+import {
+  KLASSEN,
+  mittelImAusschnitt,
+  smiKlasse,
+  type Ausschnitt,
+  type Umwelt,
+  type Zelle,
+} from "@/lib/umwelt";
 
 /**
- * Duerrelage im Kartengebiet. Der Zeitstrahl steuert Statuszeile und
- * Kartenebene gemeinsam — deshalb ist er immer sichtbar und nicht an den
- * Flaechen-Schalter gekoppelt: So springt beim Umschalten nichts.
+ * Duerrelage im sichtbaren Kartenausschnitt.
+ *
+ * Der Zeitstrahl steuert Statuszeile und Kartenebene gemeinsam. Er haengt
+ * nicht am Flaechen-Schalter, damit beim Umschalten nichts springt.
  */
 export function Bodenfeuchte({
   umwelt,
+  zellen,
+  ausschnitt,
   tagIndex,
   onTagChange,
   showLayer,
   onToggleLayer,
 }: {
   umwelt: Umwelt | null;
+  zellen: Zelle[];
+  ausschnitt: Ausschnitt | null;
   tagIndex: number;
   onTagChange: (i: number) => void;
   showLayer: boolean;
@@ -20,23 +32,30 @@ export function Bodenfeuchte({
 }) {
   if (!umwelt?.duerre) return null;
   const { serie } = umwelt.duerre;
-  const tag = serie[Math.min(tagIndex, serie.length - 1)];
+  const index = Math.min(tagIndex, serie.length - 1);
+  const tag = serie[index];
+
+  // Was man sieht, zaehlt. Erst wenn die Zellen noch nicht geladen sind,
+  // greift das Gebietsmittel aus der Tagesdatei.
+  const sicht = mittelImAusschnitt(zellen, ausschnitt, index);
+  const klasse = sicht ? smiKlasse(sicht.smi) : { name: tag.klasse, wiederkehr: tag.wiederkehr_jahre };
+
   const { aktuell, referenz } = umwelt.bodenfeuchte;
-  const aktiv = KLASSEN.findIndex((k) => k.name === tag.klasse);
+  const aktiv = KLASSEN.findIndex((k) => k.name === klasse.name);
   const [, month, day] = tag.stand.split("-");
-  const istHeute = tagIndex >= serie.length - 1;
+  const istHeute = index >= serie.length - 1;
 
   return (
     <div className="mt-3.5">
       <div className="flex items-baseline justify-between gap-2">
-        <p className="label">Boden im Gebiet</p>
+        <p className="label">Boden im Ausschnitt</p>
         <p className="text-[0.62rem] tabular-nums text-ink-muted">
           {day}.{month}.
         </p>
       </div>
 
       {/* Statusanzeige und zugleich Legende der Kartenfläche */}
-      <div className="mt-1.5 flex gap-px" role="img" aria-label={`Dürreklasse: ${tag.klasse}`}>
+      <div className="mt-1.5 flex gap-px" role="img" aria-label={`Dürreklasse: ${klasse.name}`}>
         {KLASSEN.map((k, i) => (
           <div
             key={k.name}
@@ -53,16 +72,16 @@ export function Bodenfeuchte({
       {/* Immer gerendert, damit der Schalter beim Umlegen nicht wandert */}
       <div className="mt-0.5 flex justify-between text-[0.55rem] uppercase tracking-[0.1em] text-ink-muted">
         <span>mild</span>
-        <span>4-km-Raster</span>
+        <span>{sicht ? `${sicht.zellen} ${sicht.zellen === 1 ? "Karo" : "Karos"}` : "4-km-Raster"}</span>
         <span>schwer</span>
       </div>
 
-      <p className="mt-1 text-[0.7rem] font-semibold leading-snug text-red-700">{tag.klasse}</p>
+      <p className="mt-1 text-[0.7rem] font-semibold leading-snug text-red-700">{klasse.name}</p>
       <p className="text-[0.62rem] leading-snug text-ink-muted">
-        {tag.wiederkehr_jahre ? `sonst nur alle ${tag.wiederkehr_jahre} Jahre so trocken` : ""}
+        {klasse.wiederkehr ? `sonst nur alle ${klasse.wiederkehr} Jahre so trocken` : ""}
         {istHeute && (
           <>
-            {tag.wiederkehr_jahre ? ", " : ""}Bodenwasser {aktuell}&thinsp;%
+            {klasse.wiederkehr ? ", " : ""}Bodenwasser {aktuell}&thinsp;%
             {referenz != null ? ` statt ${referenz} %` : ""}
           </>
         )}
@@ -73,7 +92,7 @@ export function Bodenfeuchte({
           Zeitraum
         </label>
         <span className="text-[0.62rem] tabular-nums text-ink-muted">
-          {istHeute ? "neuester Tag" : `vor ${serie.length - 1 - tagIndex} Tagen`}
+          {istHeute ? "neuester Tag" : `vor ${serie.length - 1 - index} Tagen`}
         </span>
       </div>
       <input
@@ -83,7 +102,7 @@ export function Bodenfeuchte({
         min={0}
         max={serie.length - 1}
         step={1}
-        value={Math.min(tagIndex, serie.length - 1)}
+        value={index}
         onChange={(e) => onTagChange(Number(e.target.value))}
       />
 

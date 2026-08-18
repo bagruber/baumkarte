@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Bodenfeuchte } from "./Bodenfeuchte";
 import { HEIGHT_MAX, HEIGHT_MIN, HEIGHT_STOPS, rampGradient } from "@/lib/ramp";
-import type { Umwelt } from "@/lib/umwelt";
+import type { Ausschnitt, Umwelt, Zelle } from "@/lib/umwelt";
 
 const TREE_COUNT = 2_868_813;
 const FILTER_MAX = 40;
@@ -11,6 +11,8 @@ export function Plate({
   minHeight,
   onMinHeightChange,
   umwelt,
+  zellen,
+  ausschnitt,
   tagIndex,
   onTagChange,
   showDuerre,
@@ -19,6 +21,8 @@ export function Plate({
   minHeight: number;
   onMinHeightChange: (v: number) => void;
   umwelt: Umwelt | null;
+  zellen: Zelle[];
+  ausschnitt: Ausschnitt | null;
   tagIndex: number;
   onTagChange: (i: number) => void;
   showDuerre: boolean;
@@ -83,6 +87,8 @@ export function Plate({
 
       <Bodenfeuchte
         umwelt={umwelt}
+        zellen={zellen}
+        ausschnitt={ausschnitt}
         tagIndex={tagIndex}
         onTagChange={onTagChange}
         showLayer={showDuerre}
@@ -131,29 +137,28 @@ export function Plate({
             >
               Einzelbäume
             </a>{" "}
-            der Bayerischen Vermessungsverwaltung, Projektgebiet 124018. Ein
-            Rechner leitet sie aus Oberflächenmodell und Luftbildern ab. Deshalb
-            kennt die Karte Standort und Höhe, aber keine Baumarten. Bäume unter
-            5&thinsp;m fehlen, und in dichten Wäldern zählt die Auswertung
-            Kronen, nicht Stämme.
+            der Bayerischen Vermessungsverwaltung, Projektgebiet 124018.
+            Ermittelt werden sie bei einer Befliegung, aus Luftbildern und dem
+            Oberflächenmodell. Deshalb kennt die Karte Standort und Höhe, aber
+            keine Baumarten. Bäume unter 5&thinsp;m fehlen, und in dichten
+            Wäldern zählt die Auswertung Kronen, nicht Stämme.
           </p>
           <p>
             Weit herausgezoomt bleibt je Rasterzelle nur der höchste Baum
             stehen. Wer hineinzoomt, sieht alle.
           </p>
           <p>
-            Die Dürreklasse stammt aus dem UFZ-Dürremonitor, gemittelt über die
-            63 Rasterzellen im Kartenausschnitt. Sie beschreibt den Gesamtboden
-            als Rang gegenüber den Jahren 1974 bis 2023: „schwere Dürre" heißt,
-            so trocken ist es hier statistisch nur alle zehn Jahre. Das
-            Bodenwasser daneben misst der Deutsche Wetterdienst an der nächsten
-            Station und gibt an, wie viel von dem für Pflanzen verfügbaren
-            Wasser noch da ist.
+            Die Dürreklasse stammt aus dem UFZ-Dürremonitor und wird über die
+            4-km-Zellen im sichtbaren Ausschnitt gemittelt. Sie beschreibt den
+            Gesamtboden als Rang gegenüber den Jahren 1974 bis 2023.
+            „Schwere Dürre" heißt also: So trocken ist es hier statistisch nur
+            alle zehn Jahre. Das Bodenwasser daneben misst der Deutsche
+            Wetterdienst an der nächsten Station. Es gibt an, wie viel von dem
+            für Pflanzen verfügbaren Wasser noch da ist.
           </p>
           <p>
             Beide Werte beschreiben die Lage in der Gegend, nicht den Zustand
-            eines einzelnen Baums. Sie erklären auch die Baumhöhen nicht: Die
-            stammen aus einer Befliegung, die Trockenheit ist von heute.
+            eines einzelnen Baums.
           </p>
           <p className="text-[0.7rem] text-ink-muted">
             Private Eigenentwicklung, kein Angebot der Stadt. Kein Tracking.{" "}
