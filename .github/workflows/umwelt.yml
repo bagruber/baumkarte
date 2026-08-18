@@ -34,8 +34,10 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Bodenfeuchte holen
-        run: python etl/fetch_umwelt.py
+      - name: Bodenfeuchte und Dürrelage holen
+        run: |
+          pip install --quiet h5py numpy
+          python etl/fetch_umwelt.py
 
       - name: Aenderung committen
         run: |

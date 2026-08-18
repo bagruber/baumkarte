@@ -1,5 +1,5 @@
 {
-  "stand": "2026-08-16",
+  "stand": "2026-08-17",
   "abgerufen": "2026-08-18",
   "station": {
     "id": 7075,
@@ -14,5 +14,14 @@
     "vergleichstage": 315,
     "einheit": "% nFK"
   },
-  "quelle": "Deutscher Wetterdienst, Climate Data Center"
+  "quelle": "Deutscher Wetterdienst, Climate Data Center",
+  "duerre": {
+    "stand": "2026-08-16",
+    "smi": 0.001,
+    "klasse": "außergewöhnliche Dürre",
+    "wiederkehr_jahre": 50,
+    "zellen": 63,
+    "referenz_zeitraum": "1974–2023",
+    "quelle": "UFZ-Dürremonitor / Helmholtz-Zentrum für Umweltforschung"
+  }
 }

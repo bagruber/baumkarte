@@ -122,13 +122,18 @@ export function Plate({
             stehen. Wer hineinzoomt, sieht alle.
           </p>
           <p>
-            Die Bodenfeuchte misst der Deutsche Wetterdienst an der nächsten
-            Station im Umland, angegeben als Anteil der nutzbaren
-            Feldkapazität: 100&nbsp;% heißt, der Boden hält so viel Wasser, wie
-            Pflanzen entnehmen können. Der Wert gilt für Gras über Lehm bis
-            60&nbsp;cm Tiefe, nicht für Waldboden, und er stammt nicht von
-            diesen Bäumen. Er zeigt die Lage in der Gegend, nicht den Zustand
-            eines einzelnen Baums.
+            Die Dürreklasse stammt aus dem UFZ-Dürremonitor, gemittelt über die
+            63 Rasterzellen im Kartenausschnitt. Sie beschreibt den Gesamtboden
+            als Rang gegenüber den Jahren 1974 bis 2023: „schwere Dürre" heißt,
+            so trocken ist es hier statistisch nur alle zehn Jahre. Das
+            Bodenwasser daneben misst der Deutsche Wetterdienst an der nächsten
+            Station und gibt an, wie viel von dem für Pflanzen verfügbaren
+            Wasser noch da ist.
+          </p>
+          <p>
+            Beide Werte beschreiben die Lage in der Gegend, nicht den Zustand
+            eines einzelnen Baums. Sie erklären auch die Baumhöhen nicht: Die
+            stammen aus einer Befliegung, die Trockenheit ist von heute.
           </p>
           <p className="text-[0.7rem] text-ink-muted">
             Private Eigenentwicklung, kein Angebot der Stadt. Kein Tracking.{" "}
@@ -146,7 +151,8 @@ export function Plate({
 
       <p className="mt-2.5 text-[0.62rem] leading-snug text-ink-muted">
         Bäume: Bayerische Vermessungsverwaltung (CC&nbsp;BY&nbsp;4.0) · Karte:
-        basemap.de / BKG
+        basemap.de / BKG · Dürre: UFZ-Dürremonitor /
+        Helmholtz-Zentrum&nbsp;für&nbsp;Umweltforschung · Bodenwasser: DWD
       </p>
     </section>
   );

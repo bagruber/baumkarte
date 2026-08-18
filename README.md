@@ -24,19 +24,28 @@ Es gibt daher **keine Baumarten** — und Bäume unter ca. 5 m fehlen.
 Lizenz der Daten: CC BY 4.0, Datenquelle: Bayerische Vermessungsverwaltung.
 Basiskarte: [basemap.de](https://basemap.de) / BKG.
 
-### Bodenfeuchte (täglich)
+### Dürrelage (täglich)
 
 Die Baumdaten sind ein Schnappschuss aus einer Befliegung. Damit die Karte
-eine Gegenwart bekommt, holt eine GitHub Action jeden Morgen die Bodenfeuchte
-der nächstgelegenen Station des
-[Deutschen Wetterdienstes](https://opendata.dwd.de/climate_environment/CDC/derived_germany/soil/daily/)
-und stellt sie dem langjährigen Mittel desselben Kalendertags gegenüber
-(Archiv ab 2005). Ohne diesen Vergleich wäre ein Wert wie „21 % nFK" nicht
-einzuordnen.
+eine Gegenwart bekommt, holt eine GitHub Action jeden Morgen zwei Werte:
 
-Der Wert gilt für Gras über Lehm bis 60 cm Tiefe — **nicht für Waldboden**,
-und er stammt nicht von diesen Bäumen. Er beschreibt die Lage in der Gegend,
-nicht den Zustand eines einzelnen Baums.
+- die **Dürreklasse** aus dem
+  [UFZ-Dürremonitor](https://www.ufz.de/index.php?de=37937) (Bodenfeuchteindex
+  SMI, Gesamtboden), gemittelt über die 63 Rasterzellen im Kartenausschnitt —
+  ein Rang gegenüber 1974–2023, also *wie ungewöhnlich* die Lage ist;
+- das **Bodenwasser** der nächsten Station des
+  [Deutschen Wetterdienstes](https://opendata.dwd.de/climate_environment/CDC/derived_germany/soil/daily/)
+  in % der nutzbaren Feldkapazität, mit eigenem Vergleich zum langjährigen
+  Mittel desselben Kalendertags — also *wie viel Wasser* noch da ist.
+
+Beide beschreiben die Lage in der Gegend, **nicht** den Zustand eines
+einzelnen Baums, und sie erklären die Baumhöhen nicht: Die stammen aus einer
+Befliegung, die Trockenheit ist von heute.
+
+Quellenvermerk UFZ: *UFZ-Dürremonitor / Helmholtz-Zentrum für
+Umweltforschung*. Die UFZ-Daten stehen **nicht** unter einer offenen Lizenz —
+frei nutzbar für Wissenschaft und redaktionelle Zwecke mit Quellenangabe
+direkt an der Karte.
 
 ## Stack
 

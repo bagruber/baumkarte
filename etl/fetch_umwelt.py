@@ -1,8 +1,13 @@
-"""Taeglicher Umweltkontext zur Baumkarte: Bodenfeuchte vom DWD.
+"""Taeglicher Umweltkontext zur Baumkarte: Duerreklasse und Bodenfeuchte.
 
-Holt die Bodenfeuchte der naechstgelegenen DWD-Station zum Kartengebiet und
-stellt den aktuellen Wert dem langjaehrigen Mittel desselben Kalendertags
-gegenueber. Ohne diesen Vergleich sagt "21 % nFK" niemandem etwas.
+Zwei Quellen, zwei verschiedene Aussagen:
+
+1. UFZ-Duerremonitor (SMI) — wie *ungewoehnlich* ist es, als Perzentil gegen
+   1974-2023. Deckt das Kartengebiet flaechig ab (63 Zellen a 4 km) und
+   liefert die Duerreklassen, die man aus den Nachrichten kennt.
+2. DWD — wie *viel* Wasser tatsaechlich im Boden ist, in % der nutzbaren
+   Feldkapazitaet, plus eigener Vergleich mit dem langjaehrigen Mittel
+   desselben Kalendertags.
 
 Ergebnis: public/data/umwelt.json — fehlt die Datei, blendet die App den
 Block einfach aus.
@@ -12,9 +17,14 @@ Aufruf:  python etl/fetch_umwelt.py
 
 import gzip
 import json
+import re
+import tempfile
 import urllib.request
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
+
+import h5py
+import numpy as np
 
 CDC = "https://opendata.dwd.de/climate_environment/CDC/derived_germany/soil/daily/"
 OUT = Path(__file__).resolve().parent.parent / "public" / "data" / "umwelt.json"
@@ -28,6 +38,22 @@ COLUMN = "BFGL_AG"
 
 # Fenster um den Kalendertag, ueber das gemittelt wird (glaettet Ausreisser)
 WINDOW_DAYS = 7
+
+# UFZ-Duerremonitor, Gesamtboden — Baeume wurzeln tiefer als die 25 cm der
+# Oberboden-Datei. Wird jede Nacht neu erzeugt, rund 2,9 MB.
+SMI_URL = "https://files.ufz.de/~drought/SM_Lall_daily_n14.nc"
+
+# Grenzen des Projektgebiets 124018 (Reihenfolge W, S, O, N)
+BBOX = (11.812, 48.4308, 12.3131, 48.6514)
+
+# Duerreklassen nach UFZ. Obergrenze (exklusiv) -> Bezeichnung, Jaehrlichkeit.
+SMI_CLASSES = [
+    (0.02, "außergewöhnliche Dürre", 50),
+    (0.05, "extreme Dürre", 20),
+    (0.10, "schwere Dürre", 10),
+    (0.20, "moderate Dürre", 5),
+    (0.30, "ungewöhnliche Trockenheit", 3),
+]
 
 
 def fetch(url: str) -> bytes:
@@ -90,6 +116,65 @@ def day_distance(day: date, month: int, dom: int) -> int:
     return min(delta, 365 - delta)
 
 
+def smi_klasse(value: float) -> tuple[str, int | None]:
+    for limit, label, wiederkehr in SMI_CLASSES:
+        if value < limit:
+            return label, wiederkehr
+    return "keine Dürre", None
+
+
+def fetch_smi() -> dict | None:
+    """Duerreindex des UFZ, gemittelt ueber das Kartengebiet.
+
+    Das Raster hat 4 km Zellen; ueber den Ausschnitt bleiben rund 60 davon.
+    Als Kartenebene waere das zu grob, als Kennzahl fuers Gebiet taugt es.
+    """
+    try:
+        with tempfile.NamedTemporaryFile(suffix=".nc", delete=False) as tmp:
+            tmp.write(fetch(SMI_URL))
+            path = tmp.name
+
+        with h5py.File(path, "r") as f:
+            smi = np.asarray(f["SMI"][:], dtype="float32")
+            lat, lon = f["lat"][:], f["lon"][:]
+            times = f["time"][:]
+            units = f["time"].attrs["units"]
+            units = units.decode() if isinstance(units, bytes) else units
+
+        Path(path).unlink(missing_ok=True)
+
+        smi = np.where(smi <= -9000, np.nan, smi)
+        w, s, e, n = BBOX
+        mask = (lat >= s) & (lat <= n) & (lon >= w) & (lon <= e)
+        if not mask.any():
+            return None
+
+        cells = smi[-1][mask]
+        cells = cells[~np.isnan(cells)]
+        if cells.size == 0:
+            return None
+
+        # "days since 2023-01-30 00:00:00"
+        m = re.search(r"days since (\d{4})-(\d{2})-(\d{2})", units)
+        epoch = date(*(int(g) for g in m.groups())) if m else None
+        stand = epoch + timedelta(days=int(times[-1])) if epoch else None
+
+        mittel = float(cells.mean())
+        label, wiederkehr = smi_klasse(mittel)
+        return {
+            "stand": stand.isoformat() if stand else None,
+            "smi": round(mittel, 3),
+            "klasse": label,
+            "wiederkehr_jahre": wiederkehr,
+            "zellen": int(cells.size),
+            "referenz_zeitraum": "1974–2023",
+            "quelle": "UFZ-Dürremonitor / Helmholtz-Zentrum für Umweltforschung",
+        }
+    except Exception as exc:  # noqa: BLE001 — Ausfall darf den Lauf nicht kippen
+        print(f"SMI nicht abrufbar: {exc}")
+        return None
+
+
 def main() -> None:
     sid, name, km = nearest_station()
     print(f"Station {sid} {name}, {km:.0f} km von der Kartenmitte")
@@ -129,6 +214,14 @@ def main() -> None:
         },
         "quelle": "Deutscher Wetterdienst, Climate Data Center",
     }
+
+    duerre = fetch_smi()
+    if duerre:
+        payload["duerre"] = duerre
+        print(
+            f"SMI {duerre['smi']:.3f} ({duerre['klasse']}) am {duerre['stand']}, "
+            f"{duerre['zellen']} Rasterzellen im Gebiet"
+        )
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

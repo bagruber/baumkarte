@@ -1,24 +1,27 @@
 import { useEffect, useState } from "react";
 
 type Umwelt = {
-  stand: string;
-  station: { name: string; entfernung_km: number };
-  bodenfeuchte: {
-    aktuell: number;
-    referenz: number | null;
-    referenz_zeitraum: string | null;
-    trockenere_vergleichstage: number;
-    vergleichstage: number;
+  bodenfeuchte: { aktuell: number; referenz: number | null };
+  duerre?: {
+    stand: string | null;
+    smi: number;
+    klasse: string;
+    wiederkehr_jahre: number | null;
   };
 };
 
-/** Skalenende des Balkens — nasse Boeden liegen ueber 100 % nFK. */
-const SCALE = 120;
+/** Duerreklassen des UFZ, von mild nach schwer — Leserichtung = Zunahme. */
+const KLASSEN = [
+  { name: "ungewöhnliche Trockenheit", farbe: "#e3c88a" },
+  { name: "moderate Dürre", farbe: "#d69a3c" },
+  { name: "schwere Dürre", farbe: "#c2662a" },
+  { name: "extreme Dürre", farbe: "#a8291f" },
+  { name: "außergewöhnliche Dürre", farbe: "#6d0818" },
+];
 
 /**
- * Bodenfeuchte der naechsten DWD-Station, taeglich per Action aktualisiert.
- * Fehlt oder bricht die Datei, rendert die Komponente nichts — die Karte
- * funktioniert ohne diesen Block.
+ * Duerrelage im Kartengebiet, taeglich per Action aktualisiert.
+ * Fehlt oder bricht die Datei, rendert die Komponente nichts.
  */
 export function Bodenfeuchte() {
   const [data, setData] = useState<Umwelt | null>(null);
@@ -36,42 +39,42 @@ export function Bodenfeuchte() {
     };
   }, []);
 
-  if (!data) return null;
-  const { aktuell, referenz, referenz_zeitraum, trockenere_vergleichstage } = data.bodenfeuchte;
-  const [, month, day] = data.stand.split("-");
-  const rekord = trockenere_vergleichstage === 0;
-  const startYear = referenz_zeitraum?.split(/[–-]/)[0];
+  if (!data?.duerre) return null;
+  const { stand, klasse, wiederkehr_jahre } = data.duerre;
+  const { aktuell, referenz } = data.bodenfeuchte;
+  const aktiv = KLASSEN.findIndex((k) => k.name === klasse);
+  const [, month, day] = (stand ?? "").split("-");
 
   return (
     <div className="mt-3.5">
       <div className="flex items-baseline justify-between gap-2">
-        <p className="label">
-          Boden am {day}.{month}.
-        </p>
-        <p className="text-[0.8rem] font-semibold tabular-nums text-ink">{aktuell}&thinsp;%</p>
-      </div>
-      <div className="relative mt-1.5 h-2 border border-ink-line bg-cream-dark">
-        <div
-          className="absolute inset-y-0 left-0 bg-gold-500"
-          style={{ width: `${Math.min((aktuell / SCALE) * 100, 100)}%` }}
-        />
-        {referenz != null && (
-          <div
-            className="absolute -top-0.5 bottom-[-2px] w-px bg-ink"
-            style={{ left: `${Math.min((referenz / SCALE) * 100, 100)}%` }}
-          />
+        <p className="label">Boden im Gebiet</p>
+        {day && (
+          <p className="text-[0.62rem] tabular-nums text-ink-muted">
+            {day}.{month}.
+          </p>
         )}
       </div>
-      {referenz != null && (
-        <p className="mt-1 text-[0.62rem] leading-snug text-ink-muted">
-          um diese Zeit sonst {referenz}&thinsp;%
-        </p>
-      )}
-      {rekord && (
-        <p className="text-[0.62rem] font-semibold leading-snug text-red-700">
-          so trocken wie noch nie{startYear ? ` seit ${startYear}` : ""}
-        </p>
-      )}
+
+      <div className="mt-1.5 flex gap-px" role="img" aria-label={`Dürreklasse: ${klasse}`}>
+        {KLASSEN.map((k, i) => (
+          <div
+            key={k.name}
+            className="h-2 flex-1"
+            style={{
+              background: i <= aktiv ? k.farbe : "var(--color-cream-dark)",
+              outline: i === aktiv ? "1px solid var(--color-ink)" : undefined,
+            }}
+          />
+        ))}
+      </div>
+
+      <p className="mt-1 text-[0.7rem] font-semibold leading-snug text-red-700">{klasse}</p>
+      <p className="text-[0.62rem] leading-snug text-ink-muted">
+        {wiederkehr_jahre ? `sonst nur alle ${wiederkehr_jahre} Jahre so trocken · ` : ""}
+        Bodenwasser {aktuell}&thinsp;%
+        {referenz != null ? `, um diese Zeit sonst ${referenz} %` : ""}
+      </p>
     </div>
   );
 }

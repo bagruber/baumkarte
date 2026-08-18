@@ -286,6 +286,55 @@ Bodenfeuchte des DWD und schreiben `public/data/umwelt.json`.
   direkt aus dem Arbeitsverzeichnis mit den frischen Daten, statt sich auf
   `deploy.yml` zu verlassen.
 
+### Dürreklasse (UFZ-Dürremonitor, SMI)
+
+Zweite Quelle im selben Lauf, seit 18.08.2026. Beantwortet eine **andere
+Frage** als der DWD-Wert: nicht „wie viel Wasser ist da", sondern „wie
+ungewöhnlich ist das".
+
+- **Datei**: `https://files.ufz.de/~drought/SM_Lall_daily_n14.nc`, letzte 14
+  Tage, jede Nacht neu (~2,9 MB). **Gesamtboden**, nicht Oberboden
+  (`SM_L02_…`) — Bäume wurzeln tiefer. Der Unterschied ist erheblich:
+  am 16.08.2026 Oberboden SMI 0,065, Gesamtboden 0,001. Kurzer Regen netzt
+  oben, die Tiefe zeigt das aufgelaufene Defizit.
+- **Format**: netCDF-4 (HDF5!), also `h5py`, nicht `scipy.io.netcdf_file`.
+  Variable `SMI` (14, 225, 175), Gitter in EPSG:31468, aber `lat`/`lon`
+  liegen als 2D-Felder bei — keine Reprojektion nötig. `_FillValue` −9999.
+  Achtung: `long_name` sagt „monthly", die Datei ist **täglich**.
+- **Klassen laut UFZ** (Vergleichszeitraum 1974–2023): <0,02 außergewöhnliche
+  Dürre (50-jährlich), <0,05 extreme (20), <0,10 schwere (10), <0,20
+  moderate (5), <0,30 ungewöhnliche Trockenheit (3).
+- **Warum keine Kartenebene**: Das Raster hat 4-km-Zellen, über den
+  Ausschnitt bleiben **63 Zellen**, Spannweite am 16.08. nur 0,008. Als
+  Fläche wäre das ein einziger Farbton ohne Aussage. Als Gebietskennzahl mit
+  benannter Klasse ist es dagegen stark — und deckt anders als die
+  DWD-Station wirklich den Kartenausschnitt ab.
+- **Plausibilitätsprobe**: 0,001 klingt extrem, ist aber im Kontext stimmig —
+  deutschlandweit lagen am selben Tag 52,8 % der Fläche in dieser Klasse,
+  Bayerns Median 0,0028. Kein Lesefehler.
+- **Nutzungsbedingungen**: Die Rechte liegen beim UFZ; unentgeltliche Nutzung
+  „im Rahmen von Wissenschaft und Forschung sowie für redaktionelle Zwecke"
+  mit dem Vermerk **„UFZ-Dürremonitor/ Helmholtz-Zentrum für
+  Umweltforschung"**, der **direkt an der Karte** stehen muss — deshalb steht
+  er fest im Randblock und nicht im eingeklappten Text. Anders als die
+  LDBV- und DWD-Daten ist das **keine offene Lizenz**; bei kommerzieller
+  Nutzung oder Weitergabe erst beim UFZ rückfragen.
+
+### Kein WMS/WFS — geprüft
+
+Der Dürremonitor ist **nicht** als OGC-Dienst verfügbar, entgegen der
+naheliegenden Annahme:
+
+- `ufz.de` und `dürremonitor.info` liefern keine Dienst-URLs; die Karten dort
+  sind statische PNG/PDF.
+- GDI-DE-Katalog: kein Treffer für „Duerremonitor". Unter „Dürre" nur
+  Bebauungspläne („Dürre Gärten") und WHYMAP; die Bodenfeuchte-Dienste
+  gehören zum **Niedersächsischen** Bodenfeuchteinformationsdienst.
+- DWD-Geoserver (`maps.dwd.de/geoserver/ows`, CORS offen): 446 Layer,
+  **keiner** zu Boden oder Dürre — reine Wetter-/Satellitenlayer.
+- JRC/Copernicus EDO ist nach `drought.emergency.copernicus.eu` umgezogen,
+  der alte WMS-Endpunkt antwortet mit 404.
+
 ### Verworfen: Grundwasser (GKD Bayern)
 
 Inhaltlich der naheliegendste Kandidat, weil die Isarauen grundwasserabhängig
@@ -318,6 +367,10 @@ hinterlegte Secrets überspringt der Lauf sich selbst, statt rot zu werden.
 
 ## Changelog
 
+- **18.08.2026 (2)** — Dürreklasse aus dem UFZ-Dürremonitor ergänzt (SMI,
+  Gesamtboden, netCDF per Tageslauf). Als Kartenebene verworfen, weil das
+  4-km-Raster über den Ausschnitt nur 63 nahezu gleiche Zellen ergibt.
+  Geprüft und dokumentiert: es gibt **keinen** WMS/WFS dafür.
 - **18.08.2026** — Bodenfeuchte vom DWD als täglicher Umweltkontext
   (Abschnitt 6) und Hostinger-Deploy für moosburg.eu vorbereitet
   (Abschnitt 7). Grundwasser geprüft und verworfen, Gründe dokumentiert.
