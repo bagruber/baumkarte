@@ -1,0 +1,66 @@
+name: Umweltdaten aktualisieren
+
+# Holt die Bodenfeuchte beim DWD und veroeffentlicht die Karte neu.
+#
+# Warum Build und Deploy hier stehen statt in deploy.yml: Ein Push mit dem
+# GITHUB_TOKEN loest keine weiteren Workflows aus. Der Lauf baut deshalb
+# direkt aus dem Arbeitsverzeichnis, in dem die frischen Daten liegen.
+
+on:
+  schedule:
+    # DWD aktualisiert am Vormittag; 06:20 UTC trifft das zuverlaessig
+    - cron: "20 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  aktualisieren:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Bodenfeuchte holen
+        run: python etl/fetch_umwelt.py
+
+      - name: Aenderung committen
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- public/data/umwelt.json; then
+            echo "Keine neuen Messwerte."
+          else
+            git add public/data/umwelt.json
+            git commit -m "Bodenfeuchte: Stand $(python -c "import json;print(json.load(open('public/data/umwelt.json'))['stand'])")"
+            git push
+          fi
+
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    needs: aktualisieren
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

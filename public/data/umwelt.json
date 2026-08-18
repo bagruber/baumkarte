@@ -1,0 +1,18 @@
+{
+  "stand": "2026-08-16",
+  "abgerufen": "2026-08-18",
+  "station": {
+    "id": 7075,
+    "name": "Elsendorf-Horneck",
+    "entfernung_km": 24
+  },
+  "bodenfeuchte": {
+    "aktuell": 21,
+    "referenz": 83,
+    "referenz_zeitraum": "2005–2025",
+    "trockenere_vergleichstage": 0,
+    "vergleichstage": 315,
+    "einheit": "% nFK"
+  },
+  "quelle": "Deutscher Wetterdienst, Climate Data Center"
+}

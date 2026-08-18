@@ -262,8 +262,65 @@ Geschwister-Apps-Abschnitt, Verantwortlicher: Benedict Arya Gruber.
 
 ---
 
+## 6. Umweltkontext (Bodenfeuchte, täglich)
+
+`etl/fetch_umwelt.py` + `.github/workflows/umwelt.yml` holen jeden Morgen die
+Bodenfeuchte des DWD und schreiben `public/data/umwelt.json`.
+
+- **Quelle**: DWD Climate Data Center, `derived_germany/soil/daily/`
+  (AMBETI-Modell). Spalte **`BFGL_AG`** = Bodenfeuchte unter **Gras über Lehm,
+  0–60 cm**, in % der nutzbaren Feldkapazität. **Kein Waldboden** — die App
+  sagt das ausdrücklich, sonst wäre es eine stille Falschbehauptung.
+- **Station**: nächstgelegene zum Gebietsmittelpunkt, aktuell 7075
+  Elsendorf-Horneck (24 km). Wird bei jedem Lauf neu bestimmt.
+- **Warum ein Referenzwert nötig ist**: „21 % nFK" sagt niemandem etwas. Das
+  Skript mittelt denselben Kalendertag ±7 Tage über das ganze Archiv
+  (2005–2025) und liefert beides. Stand 16.08.2026: 21 % gegen 83 % normal,
+  **0 von 315 Vergleichstagen waren trockener**. Plausibilitätsprobe: die
+  bekannten Dürrejahre 2018 (37 %) und 2022 (32 %) erscheinen korrekt als
+  bisherige Tiefpunkte — die Spalte wird also richtig gelesen.
+- Fehlt `umwelt.json` oder bricht der Abruf, rendert `Bodenfeuchte.tsx`
+  nichts. Die Karte funktioniert ohne den Block.
+- **Warum der Workflow selbst baut und deployt**: Ein Push mit dem
+  `GITHUB_TOKEN` löst keine weiteren Workflows aus. Der Lauf baut deshalb
+  direkt aus dem Arbeitsverzeichnis mit den frischen Daten, statt sich auf
+  `deploy.yml` zu verlassen.
+
+### Verworfen: Grundwasser (GKD Bayern)
+
+Inhaltlich der naheliegendste Kandidat, weil die Isarauen grundwasserabhängig
+sind, und es gibt Messstellen im Gebiet (z. B. „WWA Landshut 1A"). Aber: GKD
+liefert **keinen** direkten CSV-Endpunkt, die Messwertseiten sind HTML
+(`/messwerte/tabelle`, 200, `text/html`), und es fehlt jeder
+`Access-Control-Allow-Origin`-Header. Ein HTML-Scraper wäre still brüchig.
+Geprüfte Alternativen: **Pegelonline** (WSV) hat volles CORS, führt die Isar
+aber nicht (keine Bundeswasserstraße, 0 von 787 Stationen). **DWD OpenData**
+und **UFZ-Dürremonitor** haben kein offenes CORS — serverseitig im Workflow
+aber problemlos, wie die Bodenfeuchte zeigt.
+
+## 7. Zweites Deploy-Ziel: moosburg.eu (Hostinger)
+
+`.github/workflows/deploy-hostinger.yml`, vorbereitet und inert: ohne
+hinterlegte Secrets überspringt der Lauf sich selbst, statt rot zu werden.
+
+- `vite.config.ts` liest `BASE_PATH` aus der Umgebung (Vorgabe
+  `/baumkarte/`). Für eine Subdomain `baumkarte.moosburg.eu` auf `/` setzen,
+  für den Unterordner `moosburg.eu/baumkarte/` auf `/baumkarte/`.
+- Nötige **Secrets**: `HOSTINGER_FTP_HOST`, `HOSTINGER_FTP_USER`,
+  `HOSTINGER_FTP_PASSWORD`. Nötige **Variables**: `HOSTINGER_REMOTE_DIR`,
+  `HOSTINGER_BASE_PATH`.
+- `public/.htaccess` ist der kritische Teil: PMTiles wird per HTTP-Range
+  gelesen. Würde Apache die Datei per `mod_deflate` komprimieren, verschöben
+  sich die Byte-Offsets und die Karte bliebe leer. Die Datei schaltet gzip
+  für `.pmtiles` ab und setzt `Accept-Ranges`. Auf GitHub Pages wirkungslos.
+- Der Upload überträgt nur geänderte Dateien; der erste Lauf schiebt rund
+  52 MB Kacheln hoch.
+
 ## Changelog
 
+- **18.08.2026** — Bodenfeuchte vom DWD als täglicher Umweltkontext
+  (Abschnitt 6) und Hostinger-Deploy für moosburg.eu vorbereitet
+  (Abschnitt 7). Grundwasser geprüft und verworfen, Gründe dokumentiert.
 - **09.08.2026** — Regenbogenleiste wieder entfernt (passt nicht zu dieser
   Anwendung), stattdessen 2px-Goldregel. Farbakzente hier nur Gold/Rot.
 - **07.08.2026** — Familien-Elemente aus `/moosburg` nachgezogen (Details in

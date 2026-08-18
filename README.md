@@ -24,6 +24,20 @@ Es gibt daher **keine Baumarten** — und Bäume unter ca. 5 m fehlen.
 Lizenz der Daten: CC BY 4.0, Datenquelle: Bayerische Vermessungsverwaltung.
 Basiskarte: [basemap.de](https://basemap.de) / BKG.
 
+### Bodenfeuchte (täglich)
+
+Die Baumdaten sind ein Schnappschuss aus einer Befliegung. Damit die Karte
+eine Gegenwart bekommt, holt eine GitHub Action jeden Morgen die Bodenfeuchte
+der nächstgelegenen Station des
+[Deutschen Wetterdienstes](https://opendata.dwd.de/climate_environment/CDC/derived_germany/soil/daily/)
+und stellt sie dem langjährigen Mittel desselben Kalendertags gegenüber
+(Archiv ab 2005). Ohne diesen Vergleich wäre ein Wert wie „21 % nFK" nicht
+einzuordnen.
+
+Der Wert gilt für Gras über Lehm bis 60 cm Tiefe — **nicht für Waldboden**,
+und er stammt nicht von diesen Bäumen. Er beschreibt die Lage in der Gegend,
+nicht den Zustand eines einzelnen Baums.
+
 ## Stack
 
 Bewusst minimal — läuft rein statisch auf GitHub Pages.
@@ -43,7 +57,23 @@ npm run dev        # Dev-Server auf http://localhost:5173
 npm run build      # Produktions-Build nach dist/
 npm run typecheck  # nur tsc, kein Build
 npm run data       # Tiles neu erzeugen (Python, GeoPackage-Pfad siehe etl/)
+
+python etl/fetch_umwelt.py   # Bodenfeuchte holen (läuft sonst täglich per Action)
 ```
+
+## Deployment
+
+- **GitHub Pages** — `.github/workflows/deploy.yml`, bei jedem Push auf `main`.
+- **moosburg.eu (Hostinger)** — `.github/workflows/deploy-hostinger.yml`,
+  vorbereitet, aber inert: Ohne hinterlegte Zugangsdaten überspringt der Lauf
+  sich selbst. Nötig sind die Secrets `HOSTINGER_FTP_HOST`,
+  `HOSTINGER_FTP_USER`, `HOSTINGER_FTP_PASSWORD` sowie die Variables
+  `HOSTINGER_REMOTE_DIR` und `HOSTINGER_BASE_PATH`.
+
+Der Build-Pfad kommt aus `BASE_PATH` (Vorgabe `/baumkarte/`): `/` für eine
+eigene Subdomain, `/baumkarte/` für einen Unterordner. `public/.htaccess`
+schaltet die gzip-Komprimierung für `.pmtiles` ab — sie würde die
+Byte-Offsets verschieben und die Karte leer lassen.
 
 ## Daten-Pipeline
 

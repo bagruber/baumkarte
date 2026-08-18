@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Bodenfeuchte } from "./Bodenfeuchte";
 import { HEIGHT_MAX, HEIGHT_MIN, HEIGHT_STOPS, rampGradient } from "@/lib/ramp";
 
 const TREE_COUNT = 2_868_813;
@@ -66,7 +67,9 @@ export function Plate({
         onChange={(e) => onMinHeightChange(Number(e.target.value))}
       />
 
-      <hr className="mt-2.5 border-ink-line" />
+      <Bodenfeuchte />
+
+      <hr className="mt-3 border-ink-line" />
 
       <button
         onClick={() => setNotesOpen(!notesOpen)}
@@ -117,6 +120,15 @@ export function Plate({
           <p>
             Weit herausgezoomt bleibt je Rasterzelle nur der höchste Baum
             stehen. Wer hineinzoomt, sieht alle.
+          </p>
+          <p>
+            Die Bodenfeuchte misst der Deutsche Wetterdienst an der nächsten
+            Station im Umland, angegeben als Anteil der nutzbaren
+            Feldkapazität: 100&nbsp;% heißt, der Boden hält so viel Wasser, wie
+            Pflanzen entnehmen können. Der Wert gilt für Gras über Lehm bis
+            60&nbsp;cm Tiefe, nicht für Waldboden, und er stammt nicht von
+            diesen Bäumen. Er zeigt die Lage in der Gegend, nicht den Zustand
+            eines einzelnen Baums.
           </p>
           <p className="text-[0.7rem] text-ink-muted">
             Private Eigenentwicklung, kein Angebot der Stadt. Kein Tracking.{" "}

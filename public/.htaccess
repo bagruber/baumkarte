@@ -1,0 +1,29 @@
+# Serverkonfiguration fuer Apache (Hostinger). Auf GitHub Pages wirkungslos.
+
+# PMTiles wird per HTTP-Range gelesen: Der Browser holt einzelne Kacheln aus
+# der 52-MB-Datei, statt sie ganz zu laden. Komprimierung wuerde das brechen,
+# weil gzip die Byte-Offsets verschiebt.
+AddType application/octet-stream .pmtiles
+<IfModule mod_deflate.c>
+  SetEnvIfNoCase Request_URI \.pmtiles$ no-gzip dont-vary
+</IfModule>
+<IfModule mod_headers.c>
+  <FilesMatch "\.pmtiles$">
+    Header set Accept-Ranges bytes
+    # Die Kacheldatei aendert sich nur bei neuen Rohdaten
+    Header set Cache-Control "public, max-age=86400"
+  </FilesMatch>
+
+  # Vite haengt Hashes an die Dateinamen, die duerfen lange liegen bleiben
+  <FilesMatch "\.(js|css|woff2?|svg)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+
+  # Einstiegsseite und Tagesdaten immer frisch pruefen
+  <FilesMatch "^(index\.html|umwelt\.json)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
+
+AddType image/svg+xml .svg
+AddType application/json .json
