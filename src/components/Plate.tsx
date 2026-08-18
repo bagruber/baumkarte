@@ -37,7 +37,7 @@ export function Plate({
 
   return (
     <section className="plate-scroll absolute inset-x-0 bottom-0 z-10 h-[52dvh] overflow-y-auto rounded-t-sm border-t border-ink-frame bg-cream px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-2px_12px_rgb(0_0_0/0.07)] sm:inset-x-auto sm:bottom-auto sm:left-4 sm:top-4 sm:h-auto sm:max-h-[calc(100dvh-2rem)] sm:w-[19.5rem] sm:rounded-sm sm:border sm:px-4 sm:pt-4 sm:pb-4 sm:shadow-soft">
-      <p className="eyebrow text-red-700">Moosburg an der Isar bis Landshut</p>
+      <p className="eyebrow text-red-700">Moosburg an der Isar</p>
       <h1 className="headline mt-1 text-[1.35rem] sm:text-[1.5rem]">Baumkarte</h1>
       <p className="mt-1.5 mb-3 text-[0.75rem] tabular-nums text-ink-soft">
         {TREE_COUNT.toLocaleString("de-DE")} Einzelbäume

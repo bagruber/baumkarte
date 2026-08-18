@@ -318,6 +318,16 @@ ungewöhnlich ist das".
   die aktuelle Klasse und dient bei zugeschalteter Fläche als Legende. Farben
   und Stufenausdruck liegen deshalb gemeinsam in `src/lib/umwelt.ts`
   (`KLASSEN`, `duerreColor`) — nicht doppelt pflegen.
+- **Die Anzeige folgt dem sichtbaren Ausschnitt** (seit 19.08.2026): Gemittelt
+  werden die Zellen, deren Mittelpunkt in `map.getBounds()` liegt, neu
+  berechnet bei jedem `moveend`. Beim Hineinzoomen zählen weniger Zellen,
+  beim Herauszoomen mehr; die Anzahl steht unter dem Balken. Bleibt bei
+  starkem Zoom keine Zelle übrig, fällt die nächstgelegene ein, sonst liefe
+  die Anzeige leer. Dafür lädt die App die Zellmittelpunkte aus
+  `duerre.geojson` (`ladeZellen`), auch wenn die Fläche ausgeschaltet ist.
+  Die Klassifizierung liegt doppelt vor: `smi_klasse` in Python für die
+  Tagesreihe, `smiKlasse` in TypeScript für den Ausschnitt. Beide Schwellen
+  müssen zusammenpassen.
 - **Zellkanten brauchen eine eigene Linienebene.** `fill-outline-color`
   zeichnet nur haarfeine Kanten ohne Breitensteuerung und blieb praktisch
   unsichtbar; erst `type: "line"` macht das 4-km-Raster sichtbar.
