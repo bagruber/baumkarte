@@ -46,8 +46,9 @@ jobs:
           local-dir: ./dist/
           server-dir: data/baumkarte/
 
-          # Alle Projekte teilen sich ein FTP-Konto. Kurz nach einer anderen
-          # Übertragung nimmt Hostinger die Verbindung verzögert an, und die
-          # 30 s Standard-Timeout der Action reichen dann nicht. Dazu kommen
-          # hier rund 52 MB Kacheln beim ersten Lauf.
-          timeout: 120000
+          # Alle Projekte teilen sich ein FTP-Konto, und die Repos können ihre
+          # Läufe nicht koordinieren (concurrency-Gruppen gelten je Repo).
+          # Läuft parallel ein datahub-Deploy, nimmt Hostinger die Verbindung
+          # erst nach Minuten an: Mit 120 s lief der Lauf in genau diesen
+          # Fall ("Timeout (control socket)"). Dazu die rund 52 MB Kacheln.
+          timeout: 300000
