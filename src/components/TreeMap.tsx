@@ -4,6 +4,7 @@ import type { StyleSpecification } from "maplibre-gl";
 import { Protocol } from "pmtiles";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { HEIGHT_STOPS } from "@/lib/ramp";
+import { duerreColor } from "@/lib/umwelt";
 
 /** Datenausdehnung des Projektgebiets 124018 (aus dem PMTiles-Header). */
 const DATA_BOUNDS: [[number, number], [number, number]] = [
@@ -41,37 +42,37 @@ function heightFilter(minHeight: number) {
     : null;
 }
 
-/** Duerreklassen des UFZ als Stufen — Farben synchron zu Bodenfeuchte.tsx. */
-const DUERRE_COLOR = [
-  "step",
-  ["get", "smi"],
-  "#6d0818",
-  0.02, "#a8291f",
-  0.05, "#c2662a",
-  0.1, "#d69a3c",
-  0.2, "#e3c88a",
-  0.3, "rgba(0,0,0,0)",
-];
-
 export function TreeMap({
   minHeight,
   showDuerre,
+  tagIndex,
 }: {
   minHeight: number;
   showDuerre: boolean;
+  tagIndex: number;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const showDuerreRef = useRef(showDuerre);
   showDuerreRef.current = showDuerre;
+  const tagRef = useRef(tagIndex);
+  tagRef.current = tagIndex;
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     const map = mapRef.current;
-    if (map?.getLayer("duerre")) {
-      map.setLayoutProperty("duerre", "visibility", showDuerre ? "visible" : "none");
-    }
+    if (!map?.getLayer("duerre")) return;
+    const sichtbar = showDuerre ? "visible" : "none";
+    map.setLayoutProperty("duerre", "visibility", sichtbar);
+    map.setLayoutProperty("duerre-kante", "visibility", sichtbar);
   }, [showDuerre]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (map?.getLayer("duerre")) {
+      map.setPaintProperty("duerre", "fill-color", duerreColor(tagIndex) as never);
+    }
+  }, [tagIndex]);
   const minHeightRef = useRef(minHeight);
   minHeightRef.current = minHeight;
 
@@ -140,19 +141,33 @@ export function TreeMap({
           type: "geojson",
           data: `${import.meta.env.BASE_URL}data/duerre.geojson`,
         });
+        const sichtbar = showDuerreRef.current ? "visible" : "none";
         map.addLayer({
           id: "duerre",
           type: "fill",
           source: "duerre",
-          layout: { visibility: showDuerreRef.current ? "visible" : "none" },
+          layout: { visibility: sichtbar },
           paint: {
             // Bewusst schwach: Die Ebene soll die Karte tönen, nicht
             // zudecken. Bei flächig gleicher Klasse bleibt ohnehin nur ein
             // Ton übrig — Aussagekraft bekommt sie erst, wenn das Gebiet
             // wächst oder die Dürre fleckig ist.
-            "fill-color": DUERRE_COLOR as never,
+            "fill-color": duerreColor(tagRef.current) as never,
             "fill-opacity": 0.16,
-            "fill-outline-color": "rgba(28,28,28,0.22)",
+          },
+        });
+        // Eigene Linienebene statt fill-outline-color: Letzteres zeichnet
+        // nur haarfeine, oft unsichtbare Kanten ohne Breitensteuerung.
+        // Die Kante macht sichtbar, wie grob das Raster ist.
+        map.addLayer({
+          id: "duerre-kante",
+          type: "line",
+          source: "duerre",
+          layout: { visibility: sichtbar },
+          paint: {
+            "line-color": "#6d0818",
+            "line-width": 0.8,
+            "line-opacity": 0.35,
           },
         });
 

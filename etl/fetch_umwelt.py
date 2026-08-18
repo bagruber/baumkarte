@@ -130,13 +130,17 @@ def smi_klasse(value: float) -> tuple[str, int | None]:
     return "keine Dürre", None
 
 
-def write_layer(layer, lat, lon, easting, northing, stand) -> None:
+def write_layer(smi, lat, lon, easting, northing, tage) -> None:
     """Rasterzellen als GeoJSON-Quadrate fuer die zuschaltbare Kartenebene.
 
     Die Zellmittelpunkte liegen in EPSG:31468 auf einem regelmaessigen Gitter;
     die Ecken lassen sich daraus exakt bilden und nach WGS84 umrechnen. Bewusst
     echte Quadrate statt interpolierter Flaeche: Das Raster ist 4 km grob, und
     eine weiche Flaeche wuerde eine Genauigkeit vortaeuschen, die es nicht gibt.
+
+    Jede Zelle traegt alle Tage als d0..dN. Eigene Felder statt einer Liste,
+    weil MapLibre-Ausdruecke damit sicher umgehen: der Zeitstrahl tauscht nur
+    den Schluessel im fill-color-Ausdruck.
     """
     from pyproj import Transformer
 
@@ -151,9 +155,13 @@ def write_layer(layer, lat, lon, easting, northing, stand) -> None:
 
     features = []
     for r, c in zip(rows, cols):
-        value = layer[r, c]
-        if np.isnan(value):
+        werte = smi[:, r, c]
+        if np.isnan(werte).all():
             continue
+        props = {
+            f"d{i}": (None if np.isnan(v) else round(float(v), 4))
+            for i, v in enumerate(werte)
+        }
         x, y = easting[c], northing[r]
         xs = [x - dx, x + dx, x + dx, x - dx, x - dx]
         ys = [y - dy, y - dy, y + dy, y + dy, y - dy]
@@ -161,7 +169,7 @@ def write_layer(layer, lat, lon, easting, northing, stand) -> None:
         features.append(
             {
                 "type": "Feature",
-                "properties": {"smi": round(float(value), 4)},
+                "properties": props,
                 "geometry": {
                     "type": "Polygon",
                     "coordinates": [[[round(a, 5), round(b, 5)] for a, b in zip(lons, lats)]],
@@ -174,7 +182,7 @@ def write_layer(layer, lat, lon, easting, northing, stand) -> None:
         json.dumps(
             {
                 "type": "FeatureCollection",
-                "stand": stand.isoformat() if stand else None,
+                "tage": [d.isoformat() for d in tage],
                 "features": features,
             },
             ensure_ascii=False,
@@ -182,7 +190,8 @@ def write_layer(layer, lat, lon, easting, northing, stand) -> None:
         + "\n",
         encoding="utf-8",
     )
-    print(f"{len(features)} Rasterzellen -> {GEOJSON_OUT}")
+    size = GEOJSON_OUT.stat().st_size / 1024
+    print(f"{len(features)} Rasterzellen x {len(tage)} Tage -> {GEOJSON_OUT} ({size:.0f} KB)")
 
 
 def fetch_smi() -> dict | None:
@@ -212,26 +221,38 @@ def fetch_smi() -> dict | None:
         if not mask.any():
             return None
 
-        cells = smi[-1][mask]
-        cells = cells[~np.isnan(cells)]
-        if cells.size == 0:
-            return None
-
         # "days since 2023-01-30 00:00:00"
         m = re.search(r"days since (\d{4})-(\d{2})-(\d{2})", units)
         epoch = date(*(int(g) for g in m.groups())) if m else None
-        stand = epoch + timedelta(days=int(times[-1])) if epoch else None
+        if epoch is None:
+            return None
+        tage = [epoch + timedelta(days=int(t)) for t in times]
 
-        write_layer(smi[-1], lat, lon, easting, northing, stand)
+        write_layer(smi, lat, lon, easting, northing, tage)
 
-        mittel = float(cells.mean())
-        label, wiederkehr = smi_klasse(mittel)
+        # Gebietsmittel je Tag — traegt den Zeitstrahl in der App
+        serie = []
+        for tag, layer in zip(tage, smi):
+            cells = layer[mask]
+            cells = cells[~np.isnan(cells)]
+            if cells.size == 0:
+                continue
+            mittel = float(cells.mean())
+            label, wiederkehr = smi_klasse(mittel)
+            serie.append(
+                {
+                    "stand": tag.isoformat(),
+                    "smi": round(mittel, 3),
+                    "klasse": label,
+                    "wiederkehr_jahre": wiederkehr,
+                }
+            )
+        if not serie:
+            return None
+
         return {
-            "stand": stand.isoformat() if stand else None,
-            "smi": round(mittel, 3),
-            "klasse": label,
-            "wiederkehr_jahre": wiederkehr,
-            "zellen": int(cells.size),
+            "serie": serie,
+            "zellen": int((~np.isnan(smi[-1][mask])).sum()),
             "referenz_zeitraum": "1974–2023",
             "quelle": "UFZ-Dürremonitor / Helmholtz-Zentrum für Umweltforschung",
         }
@@ -283,9 +304,10 @@ def main() -> None:
     duerre = fetch_smi()
     if duerre:
         payload["duerre"] = duerre
+        letzte = duerre["serie"][-1]
         print(
-            f"SMI {duerre['smi']:.3f} ({duerre['klasse']}) am {duerre['stand']}, "
-            f"{duerre['zellen']} Rasterzellen im Gebiet"
+            f"SMI {letzte['smi']:.3f} ({letzte['klasse']}) am {letzte['stand']}, "
+            f"{duerre['zellen']} Rasterzellen, {len(duerre['serie'])} Tage"
         )
 
     OUT.parent.mkdir(parents=True, exist_ok=True)

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Bodenfeuchte } from "./Bodenfeuchte";
 import { HEIGHT_MAX, HEIGHT_MIN, HEIGHT_STOPS, rampGradient } from "@/lib/ramp";
+import type { Umwelt } from "@/lib/umwelt";
 
 const TREE_COUNT = 2_868_813;
 const FILTER_MAX = 40;
@@ -9,20 +10,29 @@ const FILTER_MAX = 40;
 export function Plate({
   minHeight,
   onMinHeightChange,
+  umwelt,
+  tagIndex,
+  onTagChange,
   showDuerre,
   onToggleDuerre,
 }: {
   minHeight: number;
   onMinHeightChange: (v: number) => void;
+  umwelt: Umwelt | null;
+  tagIndex: number;
+  onTagChange: (i: number) => void;
   showDuerre: boolean;
   onToggleDuerre: (v: boolean) => void;
 }) {
+  // Mobil hat die Platte eine feste Hoehe statt mitzuwachsen: So verschiebt
+  // das Ausklappen der Erlaeuterung nichts, was darueber steht — der Block
+  // ist ohnehin scrollbar. Am Desktop haengt sie oben und waechst nach unten.
   const [notesOpen, setNotesOpen] = useState(false);
   const filtered = minHeight > HEIGHT_MIN;
   const maskPercent = ((minHeight - HEIGHT_MIN) / (HEIGHT_MAX - HEIGHT_MIN)) * 100;
 
   return (
-    <section className="absolute inset-x-0 bottom-0 z-10 max-h-[72dvh] overflow-y-auto rounded-t-sm border-t border-ink-frame bg-cream px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-2px_12px_rgb(0_0_0/0.07)] sm:inset-x-auto sm:bottom-auto sm:left-4 sm:top-4 sm:w-[19.5rem] sm:rounded-sm sm:border sm:px-4 sm:pt-4 sm:pb-4 sm:shadow-soft">
+    <section className="plate-scroll absolute inset-x-0 bottom-0 z-10 h-[52dvh] overflow-y-auto rounded-t-sm border-t border-ink-frame bg-cream px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-2px_12px_rgb(0_0_0/0.07)] sm:inset-x-auto sm:bottom-auto sm:left-4 sm:top-4 sm:h-auto sm:max-h-[calc(100dvh-2rem)] sm:w-[19.5rem] sm:rounded-sm sm:border sm:px-4 sm:pt-4 sm:pb-4 sm:shadow-soft">
       <p className="eyebrow text-red-700">Moosburg an der Isar bis Landshut</p>
       <h1 className="headline mt-1 text-[1.35rem] sm:text-[1.5rem]">Baumkarte</h1>
       <p className="mt-1.5 mb-3 text-[0.75rem] tabular-nums text-ink-soft">
@@ -71,7 +81,13 @@ export function Plate({
         onChange={(e) => onMinHeightChange(Number(e.target.value))}
       />
 
-      <Bodenfeuchte showLayer={showDuerre} onToggleLayer={onToggleDuerre} />
+      <Bodenfeuchte
+        umwelt={umwelt}
+        tagIndex={tagIndex}
+        onTagChange={onTagChange}
+        showLayer={showDuerre}
+        onToggleLayer={onToggleDuerre}
+      />
 
       <hr className="mt-3 border-ink-line" />
 
