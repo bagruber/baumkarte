@@ -315,9 +315,33 @@ ungewöhnlich ist das".
   Der Export deckt darum schon `LAYER_BBOX` = 11,45–12,75 / 48,20–48,90 ab
   (469 Zellen, 97 KB), deutlich mehr als die Baumdaten.
 - **Statusanzeige = Legende**: Derselbe Fünf-Stufen-Balken im Randblock zeigt
-  die aktuelle Klasse und dient bei zugeschalteter Fläche als Legende; die
-  Farben in `Bodenfeuchte.tsx` und `DUERRE_COLOR` in `TreeMap.tsx` müssen
-  synchron bleiben.
+  die aktuelle Klasse und dient bei zugeschalteter Fläche als Legende. Farben
+  und Stufenausdruck liegen deshalb gemeinsam in `src/lib/umwelt.ts`
+  (`KLASSEN`, `duerreColor`) — nicht doppelt pflegen.
+- **Zellkanten brauchen eine eigene Linienebene.** `fill-outline-color`
+  zeichnet nur haarfeine Kanten ohne Breitensteuerung und blieb praktisch
+  unsichtbar; erst `type: "line"` macht das 4-km-Raster sichtbar.
+- **Zeitstrahl über 14 Tage**: Die GeoJSON trägt je Zelle `d0..d13`, die
+  `umwelt.json` das Gebietsmittel je Tag. Eigene Felder statt einer Liste,
+  weil MapLibre-Ausdrücke damit sicher umgehen — der Regler tauscht nur den
+  Schlüssel im `fill-color`-Ausdruck. Tage, nicht Wochen: Die Datei enthält
+  14 Tageswerte, Wochen ergäben zwei Punkte. Für einen langen Rückblick
+  gäbe es `SMI_Gesamtboden_monatlich.nc` (1950–2024).
+
+### Ruhige Oberfläche (keine Sprünge)
+
+Vom User ausdrücklich gefordert, deshalb festgehalten:
+
+- Die Legendenzeile unter dem Klassenbalken wird **immer** gerendert, nicht
+  nur bei zugeschalteter Fläche — sonst wandert der Schalter beim Umlegen.
+- Der Zeitstrahl hängt **nicht** am Flächen-Schalter, er steuert Statuszeile
+  und Karte gemeinsam und ist immer sichtbar.
+- Die Platte hat **mobil eine feste Höhe** (`h-[52dvh]`) mit eigenem
+  Scrollbereich statt mitzuwachsen. Weil sie unten angeschlagen ist, würde
+  Wachstum alles darüber verschieben. Am Desktop hängt sie oben und darf
+  nach unten wachsen. Gemessen: Checkbox-Position in allen Zuständen
+  identisch (mobil 767 px, Desktop 398 px).
+- Scrollbalken über `.plate-scroll` im Papierton statt im System-Blau.
 - **Plausibilitätsprobe**: 0,001 klingt extrem, ist aber im Kontext stimmig —
   deutschlandweit lagen am selben Tag 52,8 % der Fläche in dieser Klasse,
   Bayerns Median 0,0028. Kein Lesefehler.
@@ -384,9 +408,22 @@ diesem Host.
   „Karten" mit einem normalen `<a>` auf `${BASE_URL}baumkarte/` — die
   Baumkarte ist ein eigener Build, kein Manifest-Datensatz, also keine
   Router-Route.
+- **Drei Card-Arten in datahub** (`datahub/src/lib/cardKind.ts`), unterschieden
+  nach Herkunft der Zahlen: `umfrage` (weiß, roter Akzent), `statistik`
+  (pergamentener Grund, gold) und `eigen` (feine Schraffur, `.card-hatch`).
+  Die Schraffur ist bewusst eine Textur statt einer dritten Farbe — die
+  Palette bleibt eng, und der Unterschied trägt auch in Graustufen. Die
+  Baumkarte ist der erste Fall von `eigen`.
+- **Stolperfalle beim Testen**: Läuft parallel noch ein `vite preview`,
+  weicht der nächste auf Port 4174/4175 aus. Vor Browser-Tests prüfen, welcher
+  Port wirklich bedient wird.
 
 ## Changelog
 
+- **19.08.2026 (2)** — Zeitstrahl über 14 Tage, Zellkanten als eigene
+  Linienebene, sprungfreie Platte mit fester Höhe mobil, Scrollbalken im
+  Papierton. In datahub drei Card-Arten nach Herkunft der Zahlen.
+  Hostinger-Deploy läuft (`FTP_HOST` war zunächst falsch gesetzt).
 - **19.08.2026** — Dürrefläche als zuschaltbare Kartenebene (4-km-Quadrate,
   schwach getönt, Klassenbalken doppelt als Legende). Deploy nach
   `moosburg.eu/data/baumkarte/` scharf geschaltet, Card in datahub ergänzt.
