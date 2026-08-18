@@ -46,6 +46,13 @@ SMI_URL = "https://files.ufz.de/~drought/SM_Lall_daily_n14.nc"
 # Grenzen des Projektgebiets 124018 (Reihenfolge W, S, O, N)
 BBOX = (11.812, 48.4308, 12.3131, 48.6514)
 
+# Fuer die Kartenebene groesser gefasst als die Baumdaten: deckt den
+# schwenkbaren Bereich ab und traegt schon, wenn das Gebiet spaeter auf den
+# restlichen Landkreis waechst.
+LAYER_BBOX = (11.45, 48.20, 12.75, 48.90)
+
+GEOJSON_OUT = Path(__file__).resolve().parent.parent / "public" / "data" / "duerre.geojson"
+
 # Duerreklassen nach UFZ. Obergrenze (exklusiv) -> Bezeichnung, Jaehrlichkeit.
 SMI_CLASSES = [
     (0.02, "außergewöhnliche Dürre", 50),
@@ -123,6 +130,61 @@ def smi_klasse(value: float) -> tuple[str, int | None]:
     return "keine Dürre", None
 
 
+def write_layer(layer, lat, lon, easting, northing, stand) -> None:
+    """Rasterzellen als GeoJSON-Quadrate fuer die zuschaltbare Kartenebene.
+
+    Die Zellmittelpunkte liegen in EPSG:31468 auf einem regelmaessigen Gitter;
+    die Ecken lassen sich daraus exakt bilden und nach WGS84 umrechnen. Bewusst
+    echte Quadrate statt interpolierter Flaeche: Das Raster ist 4 km grob, und
+    eine weiche Flaeche wuerde eine Genauigkeit vortaeuschen, die es nicht gibt.
+    """
+    from pyproj import Transformer
+
+    w, s, e, n = LAYER_BBOX
+    rows, cols = np.where((lat >= s) & (lat <= n) & (lon >= w) & (lon <= e))
+    if rows.size == 0:
+        return
+
+    dx = abs(easting[1] - easting[0]) / 2
+    dy = abs(northing[1] - northing[0]) / 2
+    to_wgs = Transformer.from_crs(31468, 4326, always_xy=True)
+
+    features = []
+    for r, c in zip(rows, cols):
+        value = layer[r, c]
+        if np.isnan(value):
+            continue
+        x, y = easting[c], northing[r]
+        xs = [x - dx, x + dx, x + dx, x - dx, x - dx]
+        ys = [y - dy, y - dy, y + dy, y + dy, y - dy]
+        lons, lats = to_wgs.transform(xs, ys)
+        features.append(
+            {
+                "type": "Feature",
+                "properties": {"smi": round(float(value), 4)},
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [[[round(a, 5), round(b, 5)] for a, b in zip(lons, lats)]],
+                },
+            }
+        )
+
+    GEOJSON_OUT.parent.mkdir(parents=True, exist_ok=True)
+    GEOJSON_OUT.write_text(
+        json.dumps(
+            {
+                "type": "FeatureCollection",
+                "stand": stand.isoformat() if stand else None,
+                "features": features,
+            },
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    print(f"{len(features)} Rasterzellen -> {GEOJSON_OUT}")
+
+
 def fetch_smi() -> dict | None:
     """Duerreindex des UFZ, gemittelt ueber das Kartengebiet.
 
@@ -140,6 +202,7 @@ def fetch_smi() -> dict | None:
             times = f["time"][:]
             units = f["time"].attrs["units"]
             units = units.decode() if isinstance(units, bytes) else units
+            easting, northing = f["easting"][:], f["northing"][:]
 
         Path(path).unlink(missing_ok=True)
 
@@ -158,6 +221,8 @@ def fetch_smi() -> dict | None:
         m = re.search(r"days since (\d{4})-(\d{2})-(\d{2})", units)
         epoch = date(*(int(g) for g in m.groups())) if m else None
         stand = epoch + timedelta(days=int(times[-1])) if epoch else None
+
+        write_layer(smi[-1], lat, lon, easting, northing, stand)
 
         mittel = float(cells.mean())
         label, wiederkehr = smi_klasse(mittel)

@@ -1,0 +1,53 @@
+name: Deploy auf moosburg.eu/data/baumkarte/
+
+# Läuft neben dem GitHub-Pages-Workflow in deploy.yml auf demselben Branch.
+# Die beiden stören sich nicht: Pages nutzt kein FTP.
+#
+# Unterschiedliche base-Pfade, deshalb ein eigener Build-Befehl: Pages liegt
+# unter /baumkarte/ (Repo-Name), auf moosburg.eu hängt die Karte als
+# Unterpunkt am Data Hub, also unter /data/baumkarte/.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-data-baumkarte
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build:hostinger
+
+      # public/.htaccess wandert mit und ist hier entscheidend: Die Kacheln
+      # werden per HTTP-Range gelesen. Würde Apache die .pmtiles-Datei
+      # komprimieren, verschöben sich die Byte-Offsets und die Karte bliebe
+      # leer — ohne Fehlermeldung.
+      - name: htaccess im Build prüfen
+        run: |
+          test -f dist/.htaccess || { echo "dist/.htaccess fehlt"; exit 1; }
+          ls -la dist dist/data
+
+      - name: Nach data/baumkarte/ spiegeln
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: ./dist/
+          server-dir: data/baumkarte/
+
+          # Alle Projekte teilen sich ein FTP-Konto. Kurz nach einer anderen
+          # Übertragung nimmt Hostinger die Verbindung verzögert an, und die
+          # 30 s Standard-Timeout der Action reichen dann nicht. Dazu kommen
+          # hier rund 52 MB Kacheln beim ersten Lauf.
+          timeout: 120000

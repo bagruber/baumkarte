@@ -72,17 +72,17 @@ python etl/fetch_umwelt.py   # Bodenfeuchte holen (läuft sonst täglich per Act
 
 ## Deployment
 
-- **GitHub Pages** — `.github/workflows/deploy.yml`, bei jedem Push auf `main`.
-- **moosburg.eu (Hostinger)** — `.github/workflows/deploy-hostinger.yml`,
-  vorbereitet, aber inert: Ohne hinterlegte Zugangsdaten überspringt der Lauf
-  sich selbst. Nötig sind die Secrets `HOSTINGER_FTP_HOST`,
-  `HOSTINGER_FTP_USER`, `HOSTINGER_FTP_PASSWORD` sowie die Variables
-  `HOSTINGER_REMOTE_DIR` und `HOSTINGER_BASE_PATH`.
+Zwei Ziele, zwei Pfade:
 
-Der Build-Pfad kommt aus `BASE_PATH` (Vorgabe `/baumkarte/`): `/` für eine
-eigene Subdomain, `/baumkarte/` für einen Unterordner. `public/.htaccess`
-schaltet die gzip-Komprimierung für `.pmtiles` ab — sie würde die
-Byte-Offsets verschieben und die Karte leer lassen.
+- **GitHub Pages** — `.github/workflows/deploy.yml`, Basis `/baumkarte/`.
+- **moosburg.eu** — `.github/workflows/hostinger.yml`, Basis
+  `/data/baumkarte/`: Dort hängt die Karte als Unterpunkt am
+  [Data Hub](https://moosburg.eu/data/) und ist von dessen Startseite
+  verlinkt.
+
+`public/.htaccess` schaltet die gzip-Komprimierung für `.pmtiles` ab — sie
+würde die Byte-Offsets verschieben und die Karte leer lassen, ohne
+Fehlermeldung.
 
 ## Daten-Pipeline
 

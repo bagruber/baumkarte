@@ -9,9 +9,13 @@ const FILTER_MAX = 40;
 export function Plate({
   minHeight,
   onMinHeightChange,
+  showDuerre,
+  onToggleDuerre,
 }: {
   minHeight: number;
   onMinHeightChange: (v: number) => void;
+  showDuerre: boolean;
+  onToggleDuerre: (v: boolean) => void;
 }) {
   const [notesOpen, setNotesOpen] = useState(false);
   const filtered = minHeight > HEIGHT_MIN;
@@ -67,7 +71,7 @@ export function Plate({
         onChange={(e) => onMinHeightChange(Number(e.target.value))}
       />
 
-      <Bodenfeuchte />
+      <Bodenfeuchte showLayer={showDuerre} onToggleLayer={onToggleDuerre} />
 
       <hr className="mt-3 border-ink-line" />
 

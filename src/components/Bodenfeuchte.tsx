@@ -10,7 +10,8 @@ type Umwelt = {
   };
 };
 
-/** Duerreklassen des UFZ, von mild nach schwer — Leserichtung = Zunahme. */
+/** Duerreklassen des UFZ, von mild nach schwer — Leserichtung = Zunahme.
+ *  Farben synchron zu DUERRE_COLOR in TreeMap.tsx. */
 const KLASSEN = [
   { name: "ungewöhnliche Trockenheit", farbe: "#e3c88a" },
   { name: "moderate Dürre", farbe: "#d69a3c" },
@@ -23,7 +24,13 @@ const KLASSEN = [
  * Duerrelage im Kartengebiet, taeglich per Action aktualisiert.
  * Fehlt oder bricht die Datei, rendert die Komponente nichts.
  */
-export function Bodenfeuchte() {
+export function Bodenfeuchte({
+  showLayer,
+  onToggleLayer,
+}: {
+  showLayer: boolean;
+  onToggleLayer: (v: boolean) => void;
+}) {
   const [data, setData] = useState<Umwelt | null>(null);
 
   useEffect(() => {
@@ -56,25 +63,47 @@ export function Bodenfeuchte() {
         )}
       </div>
 
+      {/* Derselbe Balken ist Statusanzeige und, bei zugeschalteter Flaeche,
+          Legende der Karte — die Farben sind dieselben. */}
       <div className="mt-1.5 flex gap-px" role="img" aria-label={`Dürreklasse: ${klasse}`}>
         {KLASSEN.map((k, i) => (
           <div
             key={k.name}
+            title={k.name}
             className="h-2 flex-1"
             style={{
-              background: i <= aktiv ? k.farbe : "var(--color-cream-dark)",
+              background: showLayer || i <= aktiv ? k.farbe : "var(--color-cream-dark)",
+              opacity: showLayer && i !== aktiv ? 0.45 : 1,
               outline: i === aktiv ? "1px solid var(--color-ink)" : undefined,
             }}
           />
         ))}
       </div>
+      {showLayer && (
+        <div className="mt-0.5 flex justify-between text-[0.55rem] uppercase tracking-[0.1em] text-ink-muted">
+          <span>mild</span>
+          <span>4-km-Raster</span>
+          <span>schwer</span>
+        </div>
+      )}
 
       <p className="mt-1 text-[0.7rem] font-semibold leading-snug text-red-700">{klasse}</p>
       <p className="text-[0.62rem] leading-snug text-ink-muted">
-        {wiederkehr_jahre ? `sonst nur alle ${wiederkehr_jahre} Jahre so trocken · ` : ""}
+        {wiederkehr_jahre ? `sonst nur alle ${wiederkehr_jahre} Jahre so trocken, ` : ""}
         Bodenwasser {aktuell}&thinsp;%
-        {referenz != null ? `, um diese Zeit sonst ${referenz} %` : ""}
+        {referenz != null ? `, um diese Zeit sonst ${referenz} %` : ""}
       </p>
+
+      <label className="mt-2 flex cursor-pointer items-center gap-2 text-[0.7rem] font-semibold text-ink-soft hover:text-ink">
+        <input
+          type="checkbox"
+          checked={showLayer}
+          onChange={(e) => onToggleLayer(e.target.checked)}
+          className="h-3 w-3 cursor-pointer"
+          style={{ accentColor: "#6d0818" }}
+        />
+        Fläche auf der Karte zeigen
+      </label>
     </div>
   );
 }

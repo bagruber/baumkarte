@@ -304,11 +304,20 @@ ungewöhnlich ist das".
 - **Klassen laut UFZ** (Vergleichszeitraum 1974–2023): <0,02 außergewöhnliche
   Dürre (50-jährlich), <0,05 extreme (20), <0,10 schwere (10), <0,20
   moderate (5), <0,30 ungewöhnliche Trockenheit (3).
-- **Warum keine Kartenebene**: Das Raster hat 4-km-Zellen, über den
-  Ausschnitt bleiben **63 Zellen**, Spannweite am 16.08. nur 0,008. Als
-  Fläche wäre das ein einziger Farbton ohne Aussage. Als Gebietskennzahl mit
-  benannter Klasse ist es dagegen stark — und deckt anders als die
-  DWD-Station wirklich den Kartenausschnitt ab.
+- **Kartenebene, zuschaltbar** (`duerre.geojson`, seit 19.08.2026): echte
+  4-km-Quadrate mit sichtbarer Zellkante, `fill-opacity: 0.16`, unter der
+  Baumebene. Bewusst **keine** Interpolation — eine weiche Fläche würde eine
+  Genauigkeit vortäuschen, die das Raster nicht hat. Standardmäßig aus.
+  **Was sie heute leistet und was nicht**: Über den aktuellen Ausschnitt
+  liegen 63 Zellen, alle in derselben Klasse (Spannweite 0,008) — es bleibt
+  ein gleichmäßiger Ton. Aussagekraft bekommt die Ebene erst, wenn das
+  Gebiet auf den restlichen Landkreis wächst oder die Dürre fleckig ist.
+  Der Export deckt darum schon `LAYER_BBOX` = 11,45–12,75 / 48,20–48,90 ab
+  (469 Zellen, 97 KB), deutlich mehr als die Baumdaten.
+- **Statusanzeige = Legende**: Derselbe Fünf-Stufen-Balken im Randblock zeigt
+  die aktuelle Klasse und dient bei zugeschalteter Fläche als Legende; die
+  Farben in `Bodenfeuchte.tsx` und `DUERRE_COLOR` in `TreeMap.tsx` müssen
+  synchron bleiben.
 - **Plausibilitätsprobe**: 0,001 klingt extrem, ist aber im Kontext stimmig —
   deutschlandweit lagen am selben Tag 52,8 % der Fläche in dieser Klasse,
   Bayerns Median 0,0028. Kein Lesefehler.
@@ -347,26 +356,40 @@ aber nicht (keine Bundeswasserstraße, 0 von 787 Stationen). **DWD OpenData**
 und **UFZ-Dürremonitor** haben kein offenes CORS — serverseitig im Workflow
 aber problemlos, wie die Bodenfeuchte zeigt.
 
-## 7. Zweites Deploy-Ziel: moosburg.eu (Hostinger)
+## 7. Zweites Deploy-Ziel: moosburg.eu/data/baumkarte/
 
-`.github/workflows/deploy-hostinger.yml`, vorbereitet und inert: ohne
-hinterlegte Secrets überspringt der Lauf sich selbst, statt rot zu werden.
+`.github/workflows/hostinger.yml`, gebaut nach dem Muster von
+`datahub/.github/workflows/hostinger.yml` — dort steckt die Erfahrung mit
+diesem Host.
 
-- `vite.config.ts` liest `BASE_PATH` aus der Umgebung (Vorgabe
-  `/baumkarte/`). Für eine Subdomain `baumkarte.moosburg.eu` auf `/` setzen,
-  für den Unterordner `moosburg.eu/baumkarte/` auf `/baumkarte/`.
-- Nötige **Secrets**: `HOSTINGER_FTP_HOST`, `HOSTINGER_FTP_USER`,
-  `HOSTINGER_FTP_PASSWORD`. Nötige **Variables**: `HOSTINGER_REMOTE_DIR`,
-  `HOSTINGER_BASE_PATH`.
-- `public/.htaccess` ist der kritische Teil: PMTiles wird per HTTP-Range
+- **Pfad**: Auf moosburg.eu hängt die Karte als Unterpunkt am Data Hub
+  (`/data/` → `/data/baumkarte/`). Auf GitHub Pages bleibt sie unter
+  `/baumkarte/`. Zwei Pfade, deshalb `npm run build:hostinger` mit
+  `--base=/data/baumkarte/` statt einer Umgebungsvariable — dieselbe
+  Konvention wie in datahub.
+- **Secrets** (bereits im Repo): `FTP_HOST`, `FTP_USER`, `FTP_PASSWORD`.
+  Achtung: **ohne** `HOSTINGER_`-Präfix, anders als anfangs angenommen.
+- **`server-dir: data/baumkarte/`** — relativ, ohne `/public_html/`.
+- **`timeout: 120000`**: Alle Projekte teilen sich ein FTP-Konto; kurz nach
+  einer anderen Übertragung nimmt Hostinger die Verbindung verzögert an, und
+  30 s Standard reichen nicht. Dazu die rund 52 MB Kacheln beim ersten Lauf.
+- **`public/.htaccess` ist der kritische Teil**: PMTiles wird per HTTP-Range
   gelesen. Würde Apache die Datei per `mod_deflate` komprimieren, verschöben
-  sich die Byte-Offsets und die Karte bliebe leer. Die Datei schaltet gzip
-  für `.pmtiles` ab und setzt `Accept-Ranges`. Auf GitHub Pages wirkungslos.
-- Der Upload überträgt nur geänderte Dateien; der erste Lauf schiebt rund
-  52 MB Kacheln hoch.
+  sich die Byte-Offsets und die Karte bliebe leer — ohne Fehlermeldung. Die
+  Datei schaltet gzip für `.pmtiles` ab und setzt `Accept-Ranges`. Auf
+  GitHub Pages wirkungslos. Der Workflow prüft, dass sie im Build liegt.
+- Kein SPA-Fallback nötig (anders als datahub): eine einzige Seite, kein
+  Router.
+- **Card in datahub**: `datahub/src/pages/Home.tsx`, eigener Abschnitt
+  „Karten" mit einem normalen `<a>` auf `${BASE_URL}baumkarte/` — die
+  Baumkarte ist ein eigener Build, kein Manifest-Datensatz, also keine
+  Router-Route.
 
 ## Changelog
 
+- **19.08.2026** — Dürrefläche als zuschaltbare Kartenebene (4-km-Quadrate,
+  schwach getönt, Klassenbalken doppelt als Legende). Deploy nach
+  `moosburg.eu/data/baumkarte/` scharf geschaltet, Card in datahub ergänzt.
 - **18.08.2026 (2)** — Dürreklasse aus dem UFZ-Dürremonitor ergänzt (SMI,
   Gesamtboden, netCDF per Tageslauf). Als Kartenebene verworfen, weil das
   4-km-Raster über den Ausschnitt nur 63 nahezu gleiche Zellen ergibt.

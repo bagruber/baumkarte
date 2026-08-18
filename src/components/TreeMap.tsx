@@ -41,10 +41,37 @@ function heightFilter(minHeight: number) {
     : null;
 }
 
-export function TreeMap({ minHeight }: { minHeight: number }) {
+/** Duerreklassen des UFZ als Stufen — Farben synchron zu Bodenfeuchte.tsx. */
+const DUERRE_COLOR = [
+  "step",
+  ["get", "smi"],
+  "#6d0818",
+  0.02, "#a8291f",
+  0.05, "#c2662a",
+  0.1, "#d69a3c",
+  0.2, "#e3c88a",
+  0.3, "rgba(0,0,0,0)",
+];
+
+export function TreeMap({
+  minHeight,
+  showDuerre,
+}: {
+  minHeight: number;
+  showDuerre: boolean;
+}) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const showDuerreRef = useRef(showDuerre);
+  showDuerreRef.current = showDuerre;
   const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (map?.getLayer("duerre")) {
+      map.setLayoutProperty("duerre", "visibility", showDuerre ? "visible" : "none");
+    }
+  }, [showDuerre]);
   const minHeightRef = useRef(minHeight);
   minHeightRef.current = minHeight;
 
@@ -106,6 +133,29 @@ export function TreeMap({ minHeight }: { minHeight: number }) {
           type: "vector",
           url: `pmtiles://${new URL(`${import.meta.env.BASE_URL}data/baeume.pmtiles`, window.location.href).href}`,
         });
+        // Duerreflaeche zuunterst, damit Baeume und Beschriftung lesbar
+        // bleiben. Echte 4-km-Quadrate mit sichtbarer Zellkante: Das Raster
+        // ist grob, und das soll man sehen.
+        map.addSource("duerre", {
+          type: "geojson",
+          data: `${import.meta.env.BASE_URL}data/duerre.geojson`,
+        });
+        map.addLayer({
+          id: "duerre",
+          type: "fill",
+          source: "duerre",
+          layout: { visibility: showDuerreRef.current ? "visible" : "none" },
+          paint: {
+            // Bewusst schwach: Die Ebene soll die Karte tönen, nicht
+            // zudecken. Bei flächig gleicher Klasse bleibt ohnehin nur ein
+            // Ton übrig — Aussagekraft bekommt sie erst, wenn das Gebiet
+            // wächst oder die Dürre fleckig ist.
+            "fill-color": DUERRE_COLOR as never,
+            "fill-opacity": 0.16,
+            "fill-outline-color": "rgba(28,28,28,0.22)",
+          },
+        });
+
         // Blattschnitt: Kante des Projektgebiets, damit der abrupte Rand der
         // Punktwolke als Datengrenze lesbar wird und nicht als Fehler
         const [[w, s], [e, n]] = DATA_BOUNDS;
