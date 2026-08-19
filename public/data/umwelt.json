@@ -1,6 +1,6 @@
 {
   "stand": "2026-08-17",
-  "abgerufen": "2026-08-18",
+  "abgerufen": "2026-08-19",
   "station": {
     "id": 7075,
     "name": "Elsendorf-Horneck",
@@ -14,96 +14,5 @@
     "vergleichstage": 315,
     "einheit": "% nFK"
   },
-  "quelle": "Deutscher Wetterdienst, Climate Data Center",
-  "duerre": {
-    "serie": [
-      {
-        "stand": "2026-08-03",
-        "smi": 0.002,
-        "klasse": "außergewöhnliche Dürre",
-        "wiederkehr_jahre": 50
-      },
-      {
-        "stand": "2026-08-04",
-        "smi": 0.002,
-        "klasse": "außergewöhnliche Dürre",
-        "wiederkehr_jahre": 50
-      },
-      {
-        "stand": "2026-08-05",
-        "smi": 0.002,
-        "klasse": "außergewöhnliche Dürre",
-        "wiederkehr_jahre": 50
-      },
-      {
-        "stand": "2026-08-06",
-        "smi": 0.002,
-        "klasse": "außergewöhnliche Dürre",
-        "wiederkehr_jahre": 50
-      },
-      {
-        "stand": "2026-08-07",
-        "smi": 0.002,
-        "klasse": "außergewöhnliche Dürre",
-        "wiederkehr_jahre": 50
-      },
-      {
-        "stand": "2026-08-08",
-        "smi": 0.001,
-        "klasse": "außergewöhnliche Dürre",
-        "wiederkehr_jahre": 50
-      },
-      {
-        "stand": "2026-08-09",
-        "smi": 0.001,
-        "klasse": "außergewöhnliche Dürre",
-        "wiederkehr_jahre": 50
-      },
-      {
-        "stand": "2026-08-10",
-        "smi": 0.001,
-        "klasse": "außergewöhnliche Dürre",
-        "wiederkehr_jahre": 50
-      },
-      {
-        "stand": "2026-08-11",
-        "smi": 0.001,
-        "klasse": "außergewöhnliche Dürre",
-        "wiederkehr_jahre": 50
-      },
-      {
-        "stand": "2026-08-12",
-        "smi": 0.001,
-        "klasse": "außergewöhnliche Dürre",
-        "wiederkehr_jahre": 50
-      },
-      {
-        "stand": "2026-08-13",
-        "smi": 0.001,
-        "klasse": "außergewöhnliche Dürre",
-        "wiederkehr_jahre": 50
-      },
-      {
-        "stand": "2026-08-14",
-        "smi": 0.001,
-        "klasse": "außergewöhnliche Dürre",
-        "wiederkehr_jahre": 50
-      },
-      {
-        "stand": "2026-08-15",
-        "smi": 0.001,
-        "klasse": "außergewöhnliche Dürre",
-        "wiederkehr_jahre": 50
-      },
-      {
-        "stand": "2026-08-16",
-        "smi": 0.001,
-        "klasse": "außergewöhnliche Dürre",
-        "wiederkehr_jahre": 50
-      }
-    ],
-    "zellen": 63,
-    "referenz_zeitraum": "1974–2023",
-    "quelle": "UFZ-Dürremonitor / Helmholtz-Zentrum für Umweltforschung"
-  }
+  "quelle": "Deutscher Wetterdienst, Climate Data Center"
 }
