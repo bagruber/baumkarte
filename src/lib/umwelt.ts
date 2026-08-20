@@ -8,6 +8,9 @@ export type DuerreTag = {
 export type WasserTag = { stand: string; nfk: number };
 
 export type Umwelt = {
+  /** Tag, an dem der Tageslauf die Quellen zuletzt geholt hat. Nicht der
+   *  Stand der Daten: Die Quellen liegen ein bis zwei Tage zurueck. */
+  abgerufen?: string;
   bodenfeuchte: { aktuell: number; referenz: number | null };
   duerre?: { serie: DuerreTag[]; zellen: number; referenz_zeitraum: string };
   wasser?: { serie: WasserTag[]; einheit: string; tiefe: string };

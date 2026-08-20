@@ -424,6 +424,27 @@ aber nicht (keine Bundeswasserstraße, 0 von 787 Stationen). **DWD OpenData**
 und **UFZ-Dürremonitor** haben kein offenes CORS — serverseitig im Workflow
 aber problemlos, wie die Bodenfeuchte zeigt.
 
+
+## Warum der Zeitstrahl nicht bei heute endet
+
+Beide Quellen hinken zwei Tage nach, und zwar an der Quelle, nicht bei uns.
+Belegt am 20.08.2026: Der Cron-Lauf um 07:10 UTC zog die Datei frisch, der
+`Last-Modified`-Header stand auf demselben Tag 00:36 UTC, jüngster Zeitschritt
+darin war trotzdem der 18.08. Am Tag davor lieferte der Lauf den 17.08. Der
+Dürremonitor ist kein Messwert, sondern ein mHM-Lauf auf den geprüften
+DWD-Feldern; das braucht seine Zeit.
+
+Deshalb steht am Zeitstrahl der tatsächliche Abstand zu heute („vor 2 Tagen"),
+gerechnet aus dem angezeigten Datum, nicht aus der Position im Regler. Das
+frühere „neuester Tag" stimmte zwar, las sich aber wie „heute". Der Abstand
+wird gegen 12 Uhr des Datums gerechnet, sonst kippt er je nach Uhrzeit um
+einen Tag.
+
+Daneben steht im Kleingedruckten, wann der Tageslauf zuletzt geholt hat
+(`abgerufen` in `umwelt.json`, seit jeher mitgeschrieben, nur nie angezeigt).
+Beides zusammen beantwortet die Frage, die ein altes Datum aufwirft: Die Seite
+ist frisch, die Quelle rechnet noch.
+
 ## 7. Zweites Deploy-Ziel: moosburg.eu/data/baumkarte/
 
 `.github/workflows/hostinger.yml`, gebaut nach dem Muster von
@@ -464,6 +485,8 @@ diesem Host.
 
 ## Changelog
 
+- **20.08.2026 (2)** — Zeitstrahl beschriftet den echten Abstand zu heute
+  („vor 2 Tagen") statt „neuester Tag". Abrufdatum im Kleingedruckten.
 - **20.08.2026** — Pflanzenverfügbares Wasser (nFK) als zweite, zuschaltbare
   Fläche; Auswahl aus/Dürre/Wasser statt Checkbox. Zwei latente Fehler im
   Tageslauf behoben (fehlendes `pyproj`, GeoJSON wurde nicht committet).

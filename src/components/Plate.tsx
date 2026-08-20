@@ -35,6 +35,8 @@ export function Plate({
   // ist ohnehin scrollbar. Am Desktop haengt sie oben und waechst nach unten.
   const [notesOpen, setNotesOpen] = useState(false);
   const filtered = minHeight > HEIGHT_MIN;
+  // Belegt, dass der Tageslauf laeuft, auch wenn die Quellen nachhinken
+  const abruf = umwelt?.abgerufen?.split("-");
   const maskPercent = ((minHeight - HEIGHT_MIN) / (HEIGHT_MAX - HEIGHT_MIN)) * 100;
 
   return (
@@ -188,7 +190,13 @@ export function Plate({
         </div>
       )}
 
-      <p className="mt-2.5 text-[0.62rem] leading-snug text-ink-muted">
+      {abruf && (
+        <p className="mt-2.5 text-[0.62rem] leading-snug text-ink-muted">
+          Täglich abgerufen, zuletzt {abruf[2]}.{abruf[1]}. Der Stand der
+          Quellen liegt ein bis zwei Tage zurück.
+        </p>
+      )}
+      <p className="mt-1 text-[0.62rem] leading-snug text-ink-muted">
         Bäume: Bayerische Vermessungsverwaltung (CC&nbsp;BY&nbsp;4.0) · Karte:
         basemap.de / BKG · Dürre: UFZ-Dürremonitor /
         Helmholtz-Zentrum&nbsp;für&nbsp;Umweltforschung · Bodenwasser: DWD

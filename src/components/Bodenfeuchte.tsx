@@ -10,6 +10,21 @@ import {
   type Zelle,
 } from "@/lib/umwelt";
 
+/**
+ * Wie weit liegt ein Datum zurueck?
+ *
+ * Der Zeitstrahl endet nicht heute. UFZ und DWD brauchen ein bis zwei Tage,
+ * bis ein Tag durchgerechnet und veroeffentlicht ist. Frueher stand am rechten
+ * Anschlag "neuester Tag", was sich wie "heute" las.
+ */
+function abstandZuHeute(iso: string): string {
+  // Mittag als Anker: Sonst kippt der Abstand je nach Uhrzeit um einen Tag
+  const tage = Math.round((Date.now() - Date.parse(`${iso}T12:00:00`)) / 86_400_000);
+  if (tage <= 0) return "heute";
+  if (tage === 1) return "gestern";
+  return `vor ${tage} Tagen`;
+}
+
 const WAHL: { wert: Flaeche; text: string }[] = [
   { wert: "aus", text: "aus" },
   { wert: "duerre", text: "Dürre" },
@@ -65,7 +80,7 @@ export function Bodenfeuchte({
   // ein bis zwei Tage weiter als der Duerreindex.
   const stand = zeigtWasser ? (tageWasser[index] ?? wasserTag?.stand ?? "") : smiTag.stand;
   const [, month, day] = stand.split("-");
-  const istHeute = index >= serie.length - 1;
+  const istLetzterTag = index >= serie.length - 1;
 
   const klasse = sicht ? smiKlasse(sicht.wert) : { name: smiTag.klasse, wiederkehr: smiTag.wiederkehr_jahre };
   const wasserWert = zeigtWasser && sicht ? sicht.wert : wasserTag?.nfk;
@@ -122,7 +137,7 @@ export function Bodenfeuchte({
             <p className="text-[0.7rem] font-semibold leading-snug text-red-700">{klasse.name}</p>
             <p className="text-[0.62rem] leading-snug text-ink-muted">
               {klasse.wiederkehr ? `sonst nur alle ${klasse.wiederkehr} Jahre so trocken` : ""}
-              {istHeute && (
+              {istLetzterTag && (
                 <>
                   {klasse.wiederkehr ? ", " : ""}Bodenwasser {umwelt.bodenfeuchte.aktuell}&thinsp;%
                   {umwelt.bodenfeuchte.referenz != null
@@ -140,7 +155,7 @@ export function Bodenfeuchte({
           Zeitraum
         </label>
         <span className="text-[0.62rem] tabular-nums text-ink-muted">
-          {istHeute ? "neuester Tag" : `vor ${serie.length - 1 - index} Tagen`}
+          {stand ? abstandZuHeute(stand) : ""}
         </span>
       </div>
       <input
