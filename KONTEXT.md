@@ -338,6 +338,40 @@ ungewöhnlich ist das".
   14 Tageswerte, Wochen ergäben zwei Punkte. Für einen langen Rückblick
   gäbe es `SMI_Gesamtboden_monatlich.nc` (1950–2024).
 
+### Pflanzenverfügbares Wasser (nFK) als zweite Fläche
+
+Seit 20.08.2026, aus `nFK_0_25_daily_n14.nc` derselben UFZ-Quelle.
+
+- **Warum es die stärkere Kartenebene ist**: Der SMI liegt im ganzen Gebiet in
+  einer Klasse, die Fläche bleibt ein Ton. Die nFK streut wirklich (im großen
+  Ausschnitt 8,5 bis 46,7 %) und bewegt sich über die Tage sichtbar: 3,0 →
+  5,2 → 21,1 % rund um den Regen am 18.08.
+- **Stufen bei 0/5/10/20/40 %**, nicht 0/10/20/40/70. Die zweite Wahl klang
+  runder, hätte aber fast alle Zellen in eine Farbe gelegt. Die Schwellen
+  liegen jetzt dort, wo es für Pflanzen kippt, und treffen die beobachtete
+  Spannweite.
+- **Gemeinsame Datei, getrennte Felder**: `d0..d13` für die Dürre, `w0..w13`
+  für das Wasser, plus `tage` und `tage_wasser`. Die Geometrie wird geteilt
+  (250 KB statt zweimal 176 KB). **Die Zeitachsen unterscheiden sich**: Der
+  SMI zählt Tage seit einem Stichtag, die nFK-Datei Stunden, und sie reicht
+  meist ein bis zwei Tage weiter. `lade_raster` deckt beide Fälle ab.
+- **Nur eine Fläche zur Zeit** (`Flaeche = "aus" | "duerre" | "wasser"`).
+  Zwei getönte Ebenen übereinander ergäben Matsch, und beide messen ohnehin
+  dasselbe Bodenwasser. Die Zellkante wechselt die Farbe mit der Ebene, sonst
+  läge ein rotes Gitter auf der blauen Fläche.
+
+### Zwei Fallen im Tageslauf, beide behoben
+
+Beim Einbau aufgefallen, betrafen schon die Dürreebene:
+
+1. Der Workflow installierte nur `h5py numpy`, aber `write_layer` braucht
+   **`pyproj`**. Der nächste Lauf wäre gescheitert.
+2. Committet wurde nur `umwelt.json`, nicht `duerre.geojson`. Die Kartenebene
+   wäre nie aktualisiert worden.
+
+Zusätzlich ist `write_layer` jetzt gekapselt: Scheitert der Export, werden die
+DWD-Werte trotzdem geschrieben und die Warnung landet im Log.
+
 ### Ruhige Oberfläche (keine Sprünge)
 
 Vom User ausdrücklich gefordert, deshalb festgehalten:
@@ -430,6 +464,9 @@ diesem Host.
 
 ## Changelog
 
+- **20.08.2026** — Pflanzenverfügbares Wasser (nFK) als zweite, zuschaltbare
+  Fläche; Auswahl aus/Dürre/Wasser statt Checkbox. Zwei latente Fehler im
+  Tageslauf behoben (fehlendes `pyproj`, GeoJSON wurde nicht committet).
 - **19.08.2026 (2)** — Zeitstrahl über 14 Tage, Zellkanten als eigene
   Linienebene, sprungfreie Platte mit fester Höhe mobil, Scrollbalken im
   Papierton. In datahub drei Card-Arten nach Herkunft der Zahlen.

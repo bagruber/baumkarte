@@ -4,7 +4,7 @@ import type { StyleSpecification } from "maplibre-gl";
 import { Protocol } from "pmtiles";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { HEIGHT_STOPS } from "@/lib/ramp";
-import { duerreColor, type Ausschnitt } from "@/lib/umwelt";
+import { duerreColor, wasserColor, type Ausschnitt, type Flaeche } from "@/lib/umwelt";
 
 /** Datenausdehnung des Projektgebiets 124018 (aus dem PMTiles-Header). */
 const DATA_BOUNDS: [[number, number], [number, number]] = [
@@ -44,12 +44,12 @@ function heightFilter(minHeight: number) {
 
 export function TreeMap({
   minHeight,
-  showDuerre,
+  flaeche,
   tagIndex,
   onBoundsChange,
 }: {
   minHeight: number;
-  showDuerre: boolean;
+  flaeche: Flaeche;
   tagIndex: number;
   onBoundsChange: (b: Ausschnitt) => void;
 }) {
@@ -57,8 +57,8 @@ export function TreeMap({
   boundsCb.current = onBoundsChange;
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
-  const showDuerreRef = useRef(showDuerre);
-  showDuerreRef.current = showDuerre;
+  const flaecheRef = useRef(flaeche);
+  flaecheRef.current = flaeche;
   const tagRef = useRef(tagIndex);
   tagRef.current = tagIndex;
   const [loaded, setLoaded] = useState(false);
@@ -66,16 +66,28 @@ export function TreeMap({
   useEffect(() => {
     const map = mapRef.current;
     if (!map?.getLayer("duerre")) return;
-    const sichtbar = showDuerre ? "visible" : "none";
-    map.setLayoutProperty("duerre", "visibility", sichtbar);
-    map.setLayoutProperty("duerre-kante", "visibility", sichtbar);
-  }, [showDuerre]);
+    // Immer nur eine getoente Flaeche, sonst mischen sich die Farben
+    for (const [id, an] of [
+      ["duerre", flaeche === "duerre"],
+      ["wasser", flaeche === "wasser"],
+      ["duerre-kante", flaeche !== "aus"],
+    ] as const) {
+      map.setLayoutProperty(id, "visibility", an ? "visible" : "none");
+    }
+    // Kante in der Farbe der jeweiligen Ebene, sonst liegt ein rotes Gitter
+    // auf der blauen Wasserfläche
+    map.setPaintProperty(
+      "duerre-kante",
+      "line-color",
+      flaeche === "wasser" ? "#2f5f80" : "#6d0818",
+    );
+  }, [flaeche]);
 
   useEffect(() => {
     const map = mapRef.current;
-    if (map?.getLayer("duerre")) {
-      map.setPaintProperty("duerre", "fill-color", duerreColor(tagIndex) as never);
-    }
+    if (!map?.getLayer("duerre")) return;
+    map.setPaintProperty("duerre", "fill-color", duerreColor(tagIndex) as never);
+    map.setPaintProperty("wasser", "fill-color", wasserColor(tagIndex) as never);
   }, [tagIndex]);
   const minHeightRef = useRef(minHeight);
   minHeightRef.current = minHeight;
@@ -160,12 +172,12 @@ export function TreeMap({
           type: "geojson",
           data: `${import.meta.env.BASE_URL}data/duerre.geojson`,
         });
-        const sichtbar = showDuerreRef.current ? "visible" : "none";
+        const start = flaecheRef.current;
         map.addLayer({
           id: "duerre",
           type: "fill",
           source: "duerre",
-          layout: { visibility: sichtbar },
+          layout: { visibility: start === "duerre" ? "visible" : "none" },
           paint: {
             // Bewusst schwach: Die Ebene soll die Karte tönen, nicht
             // zudecken. Bei flächig gleicher Klasse bleibt ohnehin nur ein
@@ -175,6 +187,18 @@ export function TreeMap({
             "fill-opacity": 0.16,
           },
         });
+        // Pflanzenverfuegbares Wasser: hat anders als der Duerreindex echte
+        // Streuung im Gebiet, darf deshalb etwas kraeftiger auftragen.
+        map.addLayer({
+          id: "wasser",
+          type: "fill",
+          source: "duerre",
+          layout: { visibility: start === "wasser" ? "visible" : "none" },
+          paint: {
+            "fill-color": wasserColor(tagRef.current) as never,
+            "fill-opacity": 0.3,
+          },
+        });
         // Eigene Linienebene statt fill-outline-color: Letzteres zeichnet
         // nur haarfeine, oft unsichtbare Kanten ohne Breitensteuerung.
         // Die Kante macht sichtbar, wie grob das Raster ist.
@@ -182,7 +206,7 @@ export function TreeMap({
           id: "duerre-kante",
           type: "line",
           source: "duerre",
-          layout: { visibility: sichtbar },
+          layout: { visibility: start === "aus" ? "none" : "visible" },
           paint: {
             "line-color": "#6d0818",
             "line-width": 0.8,

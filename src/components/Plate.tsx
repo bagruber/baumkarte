@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Bodenfeuchte } from "./Bodenfeuchte";
 import { HEIGHT_MAX, HEIGHT_MIN, HEIGHT_STOPS, rampGradient } from "@/lib/ramp";
-import type { Ausschnitt, Umwelt, Zelle } from "@/lib/umwelt";
+import type { Ausschnitt, Flaeche, Umwelt, Zelle } from "@/lib/umwelt";
 
 const TREE_COUNT = 2_868_813;
 const FILTER_MAX = 40;
@@ -12,21 +12,23 @@ export function Plate({
   onMinHeightChange,
   umwelt,
   zellen,
+  tageWasser,
   ausschnitt,
   tagIndex,
   onTagChange,
-  showDuerre,
-  onToggleDuerre,
+  flaeche,
+  onFlaecheChange,
 }: {
   minHeight: number;
   onMinHeightChange: (v: number) => void;
   umwelt: Umwelt | null;
   zellen: Zelle[];
+  tageWasser: string[];
   ausschnitt: Ausschnitt | null;
   tagIndex: number;
   onTagChange: (i: number) => void;
-  showDuerre: boolean;
-  onToggleDuerre: (v: boolean) => void;
+  flaeche: Flaeche;
+  onFlaecheChange: (f: Flaeche) => void;
 }) {
   // Mobil hat die Platte eine feste Hoehe statt mitzuwachsen: So verschiebt
   // das Ausklappen der Erlaeuterung nichts, was darueber steht — der Block
@@ -88,11 +90,12 @@ export function Plate({
       <Bodenfeuchte
         umwelt={umwelt}
         zellen={zellen}
+        tageWasser={tageWasser}
         ausschnitt={ausschnitt}
         tagIndex={tagIndex}
         onTagChange={onTagChange}
-        showLayer={showDuerre}
-        onToggleLayer={onToggleDuerre}
+        flaeche={flaeche}
+        onFlaecheChange={onFlaecheChange}
       />
 
       <hr className="mt-3 border-ink-line" />
@@ -157,6 +160,17 @@ export function Plate({
             für Pflanzen verfügbaren Wasser noch da ist.
           </p>
           <p>
+            Unter „Fläche" lassen sich zwei Ansichten desselben Bodenwassers
+            auf die Karte legen. Die Dürre zeigt, wie ungewöhnlich der Zustand
+            ist, das Wasser zeigt, wie viel tatsächlich da ist, in Prozent der
+            nutzbaren Feldkapazität für die obersten 25&thinsp;cm. Bei
+            40&thinsp;% finden Pflanzen noch gut Wasser, unter 10&thinsp;% wird
+            es eng. Immer nur eine Fläche zur Zeit, sonst mischen sich die
+            Farben.
+          </p>
+          <p>
+            Die Karos sind 4&thinsp;km groß. So grob ist das Raster, und das
+            soll man sehen: Innerhalb eines Karos steht überall derselbe Wert.
             Beide Werte beschreiben die Lage in der Gegend, nicht den Zustand
             eines einzelnen Baums.
           </p>

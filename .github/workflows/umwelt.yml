@@ -36,18 +36,22 @@ jobs:
 
       - name: Bodenfeuchte und Dürrelage holen
         run: |
-          pip install --quiet h5py numpy
+          # pyproj rechnet die Rasterzellen von EPSG:31468 nach WGS84
+          pip install --quiet h5py numpy pyproj
           python etl/fetch_umwelt.py
 
       - name: Aenderung committen
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet -- public/data/umwelt.json; then
+          # Beide Dateien: umwelt.json traegt die Kennzahlen, duerre.geojson
+          # die Rasterzellen der Kartenebenen.
+          DATEIEN="public/data/umwelt.json public/data/duerre.geojson"
+          if git diff --quiet -- $DATEIEN; then
             echo "Keine neuen Messwerte."
           else
-            git add public/data/umwelt.json
-            git commit -m "Bodenfeuchte: Stand $(python -c "import json;print(json.load(open('public/data/umwelt.json'))['stand'])")"
+            git add $DATEIEN
+            git commit -m "Umweltdaten: Stand $(python -c "import json;print(json.load(open('public/data/umwelt.json'))['stand'])")"
             git push
           fi
 

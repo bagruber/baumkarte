@@ -43,6 +43,12 @@ WINDOW_DAYS = 7
 # Oberboden-Datei. Wird jede Nacht neu erzeugt, rund 2,9 MB.
 SMI_URL = "https://files.ufz.de/~drought/SM_Lall_daily_n14.nc"
 
+# Pflanzenverfuegbares Wasser im Oberboden (0-25 cm), % der nutzbaren
+# Feldkapazitaet. Anders als der SMI ein absoluter Wert, und anders als die
+# DWD-Station flaechig. Gleiches 4-km-Gitter wie der SMI, aber eigene
+# Zeitachse: Die Datei reicht meist ein bis zwei Tage weiter.
+NFK_URL = "https://files.ufz.de/~drought/nFK_0_25_daily_n14.nc"
+
 # Grenzen des Projektgebiets 124018 (Reihenfolge W, S, O, N)
 BBOX = (11.812, 48.4308, 12.3131, 48.6514)
 
@@ -130,39 +136,105 @@ def smi_klasse(value: float) -> tuple[str, int | None]:
     return "keine Dürre", None
 
 
-def write_layer(smi, lat, lon, easting, northing, tage) -> None:
-    """Rasterzellen als GeoJSON-Quadrate fuer die zuschaltbare Kartenebene.
+class Raster:
+    """Ein UFZ-Datensatz: Werte je Tag und Zelle, plus Gitter und Datumsliste."""
+
+    def __init__(self, werte, lat, lon, easting, northing, tage):
+        self.werte = werte
+        self.lat = lat
+        self.lon = lon
+        self.easting = easting
+        self.northing = northing
+        self.tage = tage
+
+
+def lade_raster(url: str, variable: str) -> Raster | None:
+    """Eine netCDF-Datei vom UFZ einlesen.
+
+    Die Zeitachse ist nicht einheitlich: Der SMI zaehlt Tage seit einem
+    Stichtag, die nFK-Datei Stunden. Beide Faelle werden abgedeckt.
+    """
+    path = None
+    try:
+        with tempfile.NamedTemporaryFile(suffix=".nc", delete=False) as tmp:
+            tmp.write(fetch(url))
+            path = tmp.name
+
+        with h5py.File(path, "r") as f:
+            werte = np.asarray(f[variable][:], dtype="float32")
+            lat, lon = f["lat"][:], f["lon"][:]
+            times = f["time"][:]
+            units = f["time"].attrs["units"]
+            units = units.decode() if isinstance(units, bytes) else units
+            easting, northing = f["easting"][:], f["northing"][:]
+
+        werte = np.where(werte <= -9000, np.nan, werte)
+
+        m = re.search(r"(days|hours) since (\d{4})-(\d{2})-(\d{2})", units)
+        if not m:
+            print(f"{variable}: Zeitachse nicht lesbar ({units})")
+            return None
+        einheit, *teile = m.groups()
+        epoch = date(*(int(g) for g in teile))
+        faktor = timedelta(days=1) if einheit == "days" else timedelta(hours=1)
+        tage = [epoch + faktor * int(t) for t in times]
+
+        return Raster(werte, lat, lon, easting, northing, tage)
+    except Exception as exc:  # noqa: BLE001 — Ausfall darf den Lauf nicht kippen
+        print(f"{variable} nicht abrufbar: {exc}")
+        return None
+    finally:
+        if path:
+            Path(path).unlink(missing_ok=True)
+
+
+def write_layer(duerre: Raster, wasser: Raster | None) -> None:
+    """Rasterzellen als GeoJSON-Quadrate fuer die zuschaltbaren Kartenebenen.
 
     Die Zellmittelpunkte liegen in EPSG:31468 auf einem regelmaessigen Gitter;
     die Ecken lassen sich daraus exakt bilden und nach WGS84 umrechnen. Bewusst
     echte Quadrate statt interpolierter Flaeche: Das Raster ist 4 km grob, und
     eine weiche Flaeche wuerde eine Genauigkeit vortaeuschen, die es nicht gibt.
 
-    Jede Zelle traegt alle Tage als d0..dN. Eigene Felder statt einer Liste,
-    weil MapLibre-Ausdruecke damit sicher umgehen: der Zeitstrahl tauscht nur
-    den Schluessel im fill-color-Ausdruck.
+    Beide Quellen teilen sich Gitter und Datei, tragen aber eigene Felder
+    (d0..dN fuer die Duerre, w0..wN fuer das Wasser) und eigene Datumslisten:
+    Die nFK-Datei reicht meist ein bis zwei Tage weiter als der SMI. Eigene
+    Felder statt einer Liste, weil MapLibre-Ausdruecke damit sicher umgehen —
+    der Zeitstrahl tauscht nur den Schluessel im fill-color-Ausdruck.
     """
     from pyproj import Transformer
 
     w, s, e, n = LAYER_BBOX
+    lat, lon = duerre.lat, duerre.lon
     rows, cols = np.where((lat >= s) & (lat <= n) & (lon >= w) & (lon <= e))
     if rows.size == 0:
         return
 
-    dx = abs(easting[1] - easting[0]) / 2
-    dy = abs(northing[1] - northing[0]) / 2
+    gleiches_gitter = wasser is not None and wasser.werte.shape[1:] == duerre.werte.shape[1:]
+    if wasser is not None and not gleiches_gitter:
+        print("Warnung: nFK liegt auf anderem Gitter, Wasserebene entfaellt")
+
+    dx = abs(duerre.easting[1] - duerre.easting[0]) / 2
+    dy = abs(duerre.northing[1] - duerre.northing[0]) / 2
     to_wgs = Transformer.from_crs(31468, 4326, always_xy=True)
 
     features = []
     for r, c in zip(rows, cols):
-        werte = smi[:, r, c]
-        if np.isnan(werte).all():
+        smi_werte = duerre.werte[:, r, c]
+        if np.isnan(smi_werte).all():
             continue
         props = {
             f"d{i}": (None if np.isnan(v) else round(float(v), 4))
-            for i, v in enumerate(werte)
+            for i, v in enumerate(smi_werte)
         }
-        x, y = easting[c], northing[r]
+        if gleiches_gitter:
+            props.update(
+                {
+                    f"w{i}": (None if np.isnan(v) else round(float(v), 1))
+                    for i, v in enumerate(wasser.werte[:, r, c])
+                }
+            )
+        x, y = duerre.easting[c], duerre.northing[r]
         xs = [x - dx, x + dx, x + dx, x - dx, x - dx]
         ys = [y - dy, y - dy, y + dy, y + dy, y - dy]
         lons, lats = to_wgs.transform(xs, ys)
@@ -182,7 +254,8 @@ def write_layer(smi, lat, lon, easting, northing, tage) -> None:
         json.dumps(
             {
                 "type": "FeatureCollection",
-                "tage": [d.isoformat() for d in tage],
+                "tage": [d.isoformat() for d in duerre.tage],
+                "tage_wasser": [d.isoformat() for d in wasser.tage] if gleiches_gitter else None,
                 "features": features,
             },
             ensure_ascii=False,
@@ -191,74 +264,77 @@ def write_layer(smi, lat, lon, easting, northing, tage) -> None:
         encoding="utf-8",
     )
     size = GEOJSON_OUT.stat().st_size / 1024
-    print(f"{len(features)} Rasterzellen x {len(tage)} Tage -> {GEOJSON_OUT} ({size:.0f} KB)")
+    print(
+        f"{len(features)} Rasterzellen, {len(duerre.tage)} Tage Dürre"
+        f"{f', {len(wasser.tage)} Tage Wasser' if gleiches_gitter else ''}"
+        f" -> {GEOJSON_OUT} ({size:.0f} KB)"
+    )
 
 
-def fetch_smi() -> dict | None:
-    """Duerreindex des UFZ, gemittelt ueber das Kartengebiet.
+def gebietsmittel(raster: Raster) -> list[tuple[date, float]]:
+    """Mittelwert je Tag ueber das Projektgebiet."""
+    w, s, e, n = BBOX
+    mask = (raster.lat >= s) & (raster.lat <= n) & (raster.lon >= w) & (raster.lon <= e)
+    out = []
+    for tag, layer in zip(raster.tage, raster.werte):
+        cells = layer[mask]
+        cells = cells[~np.isnan(cells)]
+        if cells.size:
+            out.append((tag, float(cells.mean())))
+    return out
 
-    Das Raster hat 4 km Zellen; ueber den Ausschnitt bleiben rund 60 davon.
-    Als Kartenebene waere das zu grob, als Kennzahl fuers Gebiet taugt es.
-    """
+
+def fetch_umweltraster() -> tuple[dict | None, dict | None]:
+    """Duerreindex und pflanzenverfuegbares Wasser, beide vom UFZ."""
+    duerre = lade_raster(SMI_URL, "SMI")
+    if duerre is None:
+        return None, None
+    wasser = lade_raster(NFK_URL, "nFK")
+
+    # Scheitert der Export, sollen die DWD-Werte trotzdem aktualisiert werden.
+    # Die vorhandene GeoJSON bleibt dann stehen, deshalb laut melden.
     try:
-        with tempfile.NamedTemporaryFile(suffix=".nc", delete=False) as tmp:
-            tmp.write(fetch(SMI_URL))
-            path = tmp.name
+        write_layer(duerre, wasser)
+    except Exception as exc:  # noqa: BLE001
+        print(f"WARNUNG: Kartenebene nicht geschrieben ({exc}), alte Datei bleibt")
 
-        with h5py.File(path, "r") as f:
-            smi = np.asarray(f["SMI"][:], dtype="float32")
-            lat, lon = f["lat"][:], f["lon"][:]
-            times = f["time"][:]
-            units = f["time"].attrs["units"]
-            units = units.decode() if isinstance(units, bytes) else units
-            easting, northing = f["easting"][:], f["northing"][:]
+    serie = []
+    for tag, mittel in gebietsmittel(duerre):
+        label, wiederkehr = smi_klasse(mittel)
+        serie.append(
+            {
+                "stand": tag.isoformat(),
+                "smi": round(mittel, 3),
+                "klasse": label,
+                "wiederkehr_jahre": wiederkehr,
+            }
+        )
+    if not serie:
+        return None, None
 
-        Path(path).unlink(missing_ok=True)
+    w, s, e, n = BBOX
+    mask = (duerre.lat >= s) & (duerre.lat <= n) & (duerre.lon >= w) & (duerre.lon <= e)
+    duerre_out = {
+        "serie": serie,
+        "zellen": int((~np.isnan(duerre.werte[-1][mask])).sum()),
+        "referenz_zeitraum": "1974–2023",
+        "quelle": "UFZ-Dürremonitor / Helmholtz-Zentrum für Umweltforschung",
+    }
 
-        smi = np.where(smi <= -9000, np.nan, smi)
-        w, s, e, n = BBOX
-        mask = (lat >= s) & (lat <= n) & (lon >= w) & (lon <= e)
-        if not mask.any():
-            return None
+    wasser_out = None
+    if wasser is not None:
+        reihe = gebietsmittel(wasser)
+        if reihe:
+            wasser_out = {
+                "serie": [
+                    {"stand": tag.isoformat(), "nfk": round(mittel, 1)} for tag, mittel in reihe
+                ],
+                "einheit": "% nFK",
+                "tiefe": "0–25 cm",
+                "quelle": "UFZ-Dürremonitor / Helmholtz-Zentrum für Umweltforschung",
+            }
 
-        # "days since 2023-01-30 00:00:00"
-        m = re.search(r"days since (\d{4})-(\d{2})-(\d{2})", units)
-        epoch = date(*(int(g) for g in m.groups())) if m else None
-        if epoch is None:
-            return None
-        tage = [epoch + timedelta(days=int(t)) for t in times]
-
-        write_layer(smi, lat, lon, easting, northing, tage)
-
-        # Gebietsmittel je Tag — traegt den Zeitstrahl in der App
-        serie = []
-        for tag, layer in zip(tage, smi):
-            cells = layer[mask]
-            cells = cells[~np.isnan(cells)]
-            if cells.size == 0:
-                continue
-            mittel = float(cells.mean())
-            label, wiederkehr = smi_klasse(mittel)
-            serie.append(
-                {
-                    "stand": tag.isoformat(),
-                    "smi": round(mittel, 3),
-                    "klasse": label,
-                    "wiederkehr_jahre": wiederkehr,
-                }
-            )
-        if not serie:
-            return None
-
-        return {
-            "serie": serie,
-            "zellen": int((~np.isnan(smi[-1][mask])).sum()),
-            "referenz_zeitraum": "1974–2023",
-            "quelle": "UFZ-Dürremonitor / Helmholtz-Zentrum für Umweltforschung",
-        }
-    except Exception as exc:  # noqa: BLE001 — Ausfall darf den Lauf nicht kippen
-        print(f"SMI nicht abrufbar: {exc}")
-        return None
+    return duerre_out, wasser_out
 
 
 def main() -> None:
@@ -301,7 +377,7 @@ def main() -> None:
         "quelle": "Deutscher Wetterdienst, Climate Data Center",
     }
 
-    duerre = fetch_smi()
+    duerre, wasser = fetch_umweltraster()
     if duerre:
         payload["duerre"] = duerre
         letzte = duerre["serie"][-1]
@@ -309,6 +385,10 @@ def main() -> None:
             f"SMI {letzte['smi']:.3f} ({letzte['klasse']}) am {letzte['stand']}, "
             f"{duerre['zellen']} Rasterzellen, {len(duerre['serie'])} Tage"
         )
+    if wasser:
+        payload["wasser"] = wasser
+        lw = wasser["serie"][-1]
+        print(f"nFK {lw['nfk']:.1f} % am {lw['stand']}, {len(wasser['serie'])} Tage")
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

@@ -6,15 +6,17 @@ import {
   ladeUmwelt,
   ladeZellen,
   type Ausschnitt,
+  type Flaeche,
   type Umwelt,
   type Zelle,
 } from "./lib/umwelt";
 
 export default function App() {
   const [minHeight, setMinHeight] = useState(HEIGHT_MIN);
-  const [showDuerre, setShowDuerre] = useState(false);
+  const [flaeche, setFlaeche] = useState<Flaeche>("aus");
   const [umwelt, setUmwelt] = useState<Umwelt | null>(null);
   const [zellen, setZellen] = useState<Zelle[]>([]);
+  const [tageWasser, setTageWasser] = useState<string[]>([]);
   const [ausschnitt, setAusschnitt] = useState<Ausschnitt | null>(null);
   // Grosser Startwert: bis die Daten da sind, zeigt alles den neuesten Tag
   const [tagIndex, setTagIndex] = useState(999);
@@ -26,8 +28,10 @@ export default function App() {
       setUmwelt(d);
       if (d?.duerre) setTagIndex(d.duerre.serie.length - 1);
     });
-    ladeZellen().then((z) => {
-      if (!cancelled) setZellen(z);
+    ladeZellen().then(({ zellen, tageWasser }) => {
+      if (cancelled) return;
+      setZellen(zellen);
+      setTageWasser(tageWasser);
     });
     return () => {
       cancelled = true;
@@ -40,7 +44,7 @@ export default function App() {
     <div className="relative h-dvh">
       <TreeMap
         minHeight={minHeight}
-        showDuerre={showDuerre}
+        flaeche={flaeche}
         tagIndex={tagIndex}
         onBoundsChange={onBounds}
       />
@@ -49,11 +53,12 @@ export default function App() {
         onMinHeightChange={setMinHeight}
         umwelt={umwelt}
         zellen={zellen}
+        tageWasser={tageWasser}
         ausschnitt={ausschnitt}
         tagIndex={tagIndex}
         onTagChange={setTagIndex}
-        showDuerre={showDuerre}
-        onToggleDuerre={setShowDuerre}
+        flaeche={flaeche}
+        onFlaecheChange={setFlaeche}
       />
     </div>
   );
