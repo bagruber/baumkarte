@@ -1,13 +1,13 @@
 {
-  "stand": "2026-08-20",
-  "abgerufen": "2026-08-22",
+  "stand": "2026-08-21",
+  "abgerufen": "2026-08-23",
   "station": {
     "id": 7075,
     "name": "Elsendorf-Horneck",
     "entfernung_km": 24
   },
   "bodenfeuchte": {
-    "aktuell": 27,
+    "aktuell": 29,
     "referenz": 83,
     "referenz_zeitraum": "2005–2025",
     "trockenere_vergleichstage": 0,
@@ -17,12 +17,6 @@
   "quelle": "Deutscher Wetterdienst, Climate Data Center",
   "duerre": {
     "serie": [
-      {
-        "stand": "2026-08-07",
-        "smi": 0.002,
-        "klasse": "außergewöhnliche Dürre",
-        "wiederkehr_jahre": 50
-      },
       {
         "stand": "2026-08-08",
         "smi": 0.001,
@@ -100,6 +94,12 @@
         "smi": 0.001,
         "klasse": "außergewöhnliche Dürre",
         "wiederkehr_jahre": 50
+      },
+      {
+        "stand": "2026-08-21",
+        "smi": 0.001,
+        "klasse": "außergewöhnliche Dürre",
+        "wiederkehr_jahre": 50
       }
     ],
     "zellen": 63,
@@ -108,10 +108,6 @@
   },
   "wasser": {
     "serie": [
-      {
-        "stand": "2026-08-07",
-        "nfk": 7.5
-      },
       {
         "stand": "2026-08-08",
         "nfk": 6.7
@@ -163,6 +159,10 @@
       {
         "stand": "2026-08-20",
         "nfk": 32.3
+      },
+      {
+        "stand": "2026-08-21",
+        "nfk": 48.5
       }
     ],
     "einheit": "% nFK",
