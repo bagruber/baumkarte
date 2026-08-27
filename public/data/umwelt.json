@@ -1,16 +1,16 @@
 {
-  "stand": "2026-08-24",
-  "abgerufen": "2026-08-26",
+  "stand": "2026-08-26",
+  "abgerufen": "2026-08-27",
   "station": {
     "id": 7075,
     "name": "Elsendorf-Horneck",
     "entfernung_km": 24
   },
   "bodenfeuchte": {
-    "aktuell": 32,
-    "referenz": 84,
+    "aktuell": 30,
+    "referenz": 85,
     "referenz_zeitraum": "2005–2025",
-    "trockenere_vergleichstage": 5,
+    "trockenere_vergleichstage": 2,
     "vergleichstage": 315,
     "einheit": "% nFK"
   },
@@ -18,86 +18,86 @@
   "duerre": {
     "serie": [
       {
-        "stand": "2026-08-11",
-        "smi": 0.001,
-        "klasse": "außergewöhnliche Dürre",
-        "wiederkehr_jahre": 50
-      },
-      {
         "stand": "2026-08-12",
-        "smi": 0.001,
+        "smi": 0.002,
         "klasse": "außergewöhnliche Dürre",
         "wiederkehr_jahre": 50
       },
       {
         "stand": "2026-08-13",
-        "smi": 0.001,
+        "smi": 0.002,
         "klasse": "außergewöhnliche Dürre",
         "wiederkehr_jahre": 50
       },
       {
         "stand": "2026-08-14",
-        "smi": 0.001,
+        "smi": 0.002,
         "klasse": "außergewöhnliche Dürre",
         "wiederkehr_jahre": 50
       },
       {
         "stand": "2026-08-15",
-        "smi": 0.001,
+        "smi": 0.002,
         "klasse": "außergewöhnliche Dürre",
         "wiederkehr_jahre": 50
       },
       {
         "stand": "2026-08-16",
-        "smi": 0.001,
+        "smi": 0.002,
         "klasse": "außergewöhnliche Dürre",
         "wiederkehr_jahre": 50
       },
       {
         "stand": "2026-08-17",
-        "smi": 0.001,
+        "smi": 0.002,
         "klasse": "außergewöhnliche Dürre",
         "wiederkehr_jahre": 50
       },
       {
         "stand": "2026-08-18",
-        "smi": 0.001,
+        "smi": 0.002,
         "klasse": "außergewöhnliche Dürre",
         "wiederkehr_jahre": 50
       },
       {
         "stand": "2026-08-19",
-        "smi": 0.001,
+        "smi": 0.002,
         "klasse": "außergewöhnliche Dürre",
         "wiederkehr_jahre": 50
       },
       {
         "stand": "2026-08-20",
-        "smi": 0.001,
+        "smi": 0.002,
         "klasse": "außergewöhnliche Dürre",
         "wiederkehr_jahre": 50
       },
       {
         "stand": "2026-08-21",
-        "smi": 0.001,
+        "smi": 0.003,
         "klasse": "außergewöhnliche Dürre",
         "wiederkehr_jahre": 50
       },
       {
         "stand": "2026-08-22",
-        "smi": 0.001,
+        "smi": 0.003,
         "klasse": "außergewöhnliche Dürre",
         "wiederkehr_jahre": 50
       },
       {
         "stand": "2026-08-23",
-        "smi": 0.001,
+        "smi": 0.004,
         "klasse": "außergewöhnliche Dürre",
         "wiederkehr_jahre": 50
       },
       {
         "stand": "2026-08-24",
-        "smi": 0.001,
+        "smi": 0.004,
+        "klasse": "außergewöhnliche Dürre",
+        "wiederkehr_jahre": 50
+      },
+      {
+        "stand": "2026-08-25",
+        "smi": 0.005,
         "klasse": "außergewöhnliche Dürre",
         "wiederkehr_jahre": 50
       }
@@ -109,60 +109,60 @@
   "wasser": {
     "serie": [
       {
-        "stand": "2026-08-11",
-        "nfk": 4.6
-      },
-      {
         "stand": "2026-08-12",
-        "nfk": 4.1
+        "nfk": 9.1
       },
       {
         "stand": "2026-08-13",
-        "nfk": 3.7
+        "nfk": 8.7
       },
       {
         "stand": "2026-08-14",
-        "nfk": 3.2
+        "nfk": 8.3
       },
       {
         "stand": "2026-08-15",
-        "nfk": 2.8
+        "nfk": 8.0
       },
       {
         "stand": "2026-08-16",
-        "nfk": 3.0
+        "nfk": 8.5
       },
       {
         "stand": "2026-08-17",
-        "nfk": 5.2
+        "nfk": 11.2
       },
       {
         "stand": "2026-08-18",
-        "nfk": 21.2
+        "nfk": 26.7
       },
       {
         "stand": "2026-08-19",
-        "nfk": 32.8
+        "nfk": 38.2
       },
       {
         "stand": "2026-08-20",
-        "nfk": 32.3
+        "nfk": 38.2
       },
       {
         "stand": "2026-08-21",
-        "nfk": 48.5
+        "nfk": 53.3
       },
       {
         "stand": "2026-08-22",
-        "nfk": 60.3
+        "nfk": 64.4
       },
       {
         "stand": "2026-08-23",
-        "nfk": 58.1
+        "nfk": 62.7
       },
       {
         "stand": "2026-08-24",
-        "nfk": 54.7
+        "nfk": 59.9
+      },
+      {
+        "stand": "2026-08-25",
+        "nfk": 57.6
       }
     ],
     "einheit": "% nFK",
