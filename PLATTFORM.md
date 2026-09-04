@@ -36,10 +36,13 @@ schon einmal mit `Timeout (control socket)`.
 `github-actions[bot]` nach `main`. **Vor jedem Push erst pullen**, sonst steht
 der eigene Commit hinter einem fremden.
 
-Der Lauf baut und veröffentlicht danach selbst, aber **nur nach GitHub Pages**.
-Ein Push mit dem `GITHUB_TOKEN` löst keine weiteren Workflows aus, also startet
-er `moosburg-eu.yml` nicht mit. Auf moosburg.eu steht die Umweltlage deshalb so
-lange still, bis dort jemand von Hand deployt oder ohnehin etwas pusht.
+Der Lauf baut und veröffentlicht danach selbst nach GitHub Pages. Auf
+moosburg.eu käme er von allein nicht an: ein Push mit dem `GITHUB_TOKEN` löst
+keine weiteren Workflows aus. Deshalb hört `moosburg-eu.yml` zusätzlich per
+`workflow_run` darauf, dass „Umweltdaten aktualisieren" durch ist, und
+deployt dann. Bewusst so und nicht als zweiter FTP-Schritt in `umwelt.yml`:
+der Deploy bleibt an einer Stelle. Der Trigger feuert auch an Tagen ohne neue
+Messwerte, dann überträgt die Action inkrementell nichts.
 
 ## Offen: Zählung einbinden
 

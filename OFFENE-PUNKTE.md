@@ -31,13 +31,6 @@ tsconfig-Datei auf, die Eintraege stimmen unveraendert weiter. **Nicht
 Neben `pnpm run build` gibt es `build:hostinger` mit abweichendem `--base`.
 Beide muessen nach einem Update gruen sein; die CI baut beide.
 
-## Nichts davon ist gepusht
-
-Alle Aenderungen vom 26.08.2026 liegen als lokale Commits. Der Deploy-Workflow
-wurde von `npm ci` auf `pnpm install --frozen-lockfile` umgestellt und bekommt
-einen `pnpm/action-setup@v4`-Schritt. **Der erste Push aktiviert das.** Bricht
-danach ein Deploy, ist das die erste Stelle zum Nachsehen — nicht der App-Code.
-
 ## Beim naechsten Paket-Update
 
 Weder `pnpm install` noch `pnpm prune` raeumt die alte Version aus
@@ -50,16 +43,3 @@ pnpm store prune
 
 Ohne diesen Schritt bleibt der Speichergewinn auf dem Papier. In den beiden
 Upgrade-Wellen am 26.08.2026 hat das zusammen ~1,2 GB freigegeben.
-
-## Die taegliche Umweltlage erreicht moosburg.eu nicht
-
-`umwelt.yml` holt jeden Morgen die Bodenfeuchte, committet sie als
-`github-actions[bot]` und veroeffentlicht neu, aber nur nach GitHub Pages. Ein
-Push mit dem `GITHUB_TOKEN` loest keine weiteren Workflows aus, `moosburg-eu.yml`
-laeuft also nicht mit. Unter `moosburg.eu/data/baumkarte/` steht die Umweltlage
-deshalb auf dem Stand des letzten Deploys von Hand.
-
-Zwei Wege: den FTP-Schritt in `umwelt.yml` mit aufnehmen (dann liegt der Deploy
-an zwei Stellen), oder in `moosburg-eu.yml` einen `workflow_run`-Trigger auf
-`umwelt.yml` setzen. Der zweite Weg haelt den Deploy an einer Stelle und ist
-deshalb vorzuziehen. Bisher hat es niemand entschieden.

@@ -6,9 +6,18 @@ name: Deploy auf moosburg.eu/data/baumkarte/
 # Unterschiedliche base-Pfade, deshalb ein eigener Build-Befehl: Pages liegt
 # unter /baumkarte/ (Repo-Name), auf moosburg.eu hängt die Karte als
 # Unterpunkt am Data Hub, also unter /data/baumkarte/.
+# Der taegliche Umweltlauf committet mit dem GITHUB_TOKEN, und ein solcher
+# Push loest keine weiteren Workflows aus. Ohne den workflow_run-Trigger stuende
+# die Bodenfeuchte hier auf dem Stand des letzten Deploys von Hand. Bewusst
+# dieser Weg und nicht ein zweiter FTP-Schritt in umwelt.yml: der Deploy bleibt
+# an einer Stelle. Der Lauf feuert auch an Tagen ohne neue Messwerte, dann
+# uebertraegt die Action inkrementell nichts.
 on:
   push:
     branches: [main]
+  workflow_run:
+    workflows: ["Umweltdaten aktualisieren"]
+    types: [completed]
   workflow_dispatch:
 
 concurrency:
@@ -18,6 +27,8 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Ein gescheiterter Umweltlauf soll nicht den alten Stand neu hochladen.
+    if: github.event_name != workflow_run || github.event.workflow_run.conclusion == success
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
