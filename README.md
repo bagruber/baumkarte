@@ -74,8 +74,8 @@ python etl/fetch_umwelt.py   # Bodenfeuchte holen (läuft sonst täglich per Act
 
 Zwei Ziele, zwei Pfade:
 
-- **GitHub Pages** — `.github/workflows/deploy.yml`, Basis `/baumkarte/`.
-- **moosburg.eu** — `.github/workflows/hostinger.yml`, Basis
+- **GitHub Pages** — `.github/workflows/pages.yml`, Basis `/baumkarte/`.
+- **moosburg.eu** — `.github/workflows/moosburg-eu.yml`, Basis
   `/data/baumkarte/`: Dort hängt die Karte als Unterpunkt am
   [Data Hub](https://moosburg.eu/data/) und ist von dessen Startseite
   verlinkt.

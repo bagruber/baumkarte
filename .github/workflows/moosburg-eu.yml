@@ -1,6 +1,6 @@
 name: Deploy auf moosburg.eu/data/baumkarte/
 
-# Läuft neben dem GitHub-Pages-Workflow in deploy.yml auf demselben Branch.
+# Läuft neben dem GitHub-Pages-Workflow in pages.yml auf demselben Branch.
 # Die beiden stören sich nicht: Pages nutzt kein FTP.
 #
 # Unterschiedliche base-Pfade, deshalb ein eigener Build-Befehl: Pages liegt

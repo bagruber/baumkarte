@@ -50,3 +50,16 @@ pnpm store prune
 
 Ohne diesen Schritt bleibt der Speichergewinn auf dem Papier. In den beiden
 Upgrade-Wellen am 26.08.2026 hat das zusammen ~1,2 GB freigegeben.
+
+## Die taegliche Umweltlage erreicht moosburg.eu nicht
+
+`umwelt.yml` holt jeden Morgen die Bodenfeuchte, committet sie als
+`github-actions[bot]` und veroeffentlicht neu, aber nur nach GitHub Pages. Ein
+Push mit dem `GITHUB_TOKEN` loest keine weiteren Workflows aus, `moosburg-eu.yml`
+laeuft also nicht mit. Unter `moosburg.eu/data/baumkarte/` steht die Umweltlage
+deshalb auf dem Stand des letzten Deploys von Hand.
+
+Zwei Wege: den FTP-Schritt in `umwelt.yml` mit aufnehmen (dann liegt der Deploy
+an zwei Stellen), oder in `moosburg-eu.yml` einen `workflow_run`-Trigger auf
+`umwelt.yml` setzen. Der zweite Weg haelt den Deploy an einer Stelle und ist
+deshalb vorzuziehen. Bisher hat es niemand entschieden.

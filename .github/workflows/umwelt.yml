@@ -2,7 +2,7 @@ name: Umweltdaten aktualisieren
 
 # Holt die Bodenfeuchte beim DWD und veroeffentlicht die Karte neu.
 #
-# Warum Build und Deploy hier stehen statt in deploy.yml: Ein Push mit dem
+# Warum Build und Deploy hier stehen statt in pages.yml: Ein Push mit dem
 # GITHUB_TOKEN loest keine weiteren Workflows aus. Der Lauf baut deshalb
 # direkt aus dem Arbeitsverzeichnis, in dem die frischen Daten liegen.
 

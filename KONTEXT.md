@@ -5,20 +5,13 @@
 
 ---
 
-## 0. Arbeitsweise (Karpathy-Prinzipien)
+## 0. Arbeitsweise
 
-Nicht verhandelbar, gelten für jede Änderung:
+Die allgemeinen Prinzipien (erst denken, einfachste Lösung, chirurgische
+Änderungen, prüfbare Ziele) standen hier bis September 2026 als abgeschriebene
+Liste. Sie gelten projektübergreifend und stehen deshalb nicht mehr in jedem
+Repo. Was bleibt, gilt nur hier:
 
-1. **Think Before Coding** — Annahmen explizit machen. Bei Mehrdeutigkeit
-   Alternativen zeigen und nachfragen, nicht raten.
-2. **Simplicity First** — Einfachste lauffähige Lösung. Keine spekulativen
-   Features, keine Abstraktionen für Einmal-Nutzung.
-3. **Surgical Changes** — Nur ändern, was die Aufgabe verlangt. Bestehenden
-   Stil matchen, nicht „nebenbei verbessern".
-4. **Goal-Driven Execution** — Vage Aufgaben in messbare Erfolgskriterien
-   übersetzen, mehrstufige Arbeit mit Checkpoints strukturieren.
-
-**Weitere Regeln:**
 - Keine Erwähnung von KI-Tools/Assistenten — nirgendwo: nicht im Code, nicht
   in Commits, nicht im README, nicht in der App.
 - Sprache: UI-Texte und Doku deutsch, Code-Bezeichner englisch.
@@ -118,7 +111,7 @@ GeoJSON raus; PMTiles läuft per HTTP-Range-Requests direkt auf GitHub Pages
 
 **Deployment** (Konvention aller Geschwister):
 - `vite.config.ts`: `base: "/baumkarte/"` — sonst brechen Assets auf Pages
-- GitHub Actions `.github/workflows/deploy.yml`, Trigger auf `main`,
+- GitHub Actions `.github/workflows/pages.yml`, Trigger auf `main`,
   `dist/` → Pages-Artifact; einmalig Repo-Settings → Pages → Source:
   „GitHub Actions"
 - Scripts-Konvention: `dev`, `build` (`tsc -b && vite build`), `preview`,
@@ -284,7 +277,7 @@ Bodenfeuchte des DWD und schreiben `public/data/umwelt.json`.
 - **Warum der Workflow selbst baut und deployt**: Ein Push mit dem
   `GITHUB_TOKEN` löst keine weiteren Workflows aus. Der Lauf baut deshalb
   direkt aus dem Arbeitsverzeichnis mit den frischen Daten, statt sich auf
-  `deploy.yml` zu verlassen.
+  `pages.yml` zu verlassen.
 
 ### Dürreklasse (UFZ-Dürremonitor, SMI)
 
@@ -447,8 +440,8 @@ ist frisch, die Quelle rechnet noch.
 
 ## 7. Zweites Deploy-Ziel: moosburg.eu/data/baumkarte/
 
-`.github/workflows/hostinger.yml`, gebaut nach dem Muster von
-`datahub/.github/workflows/hostinger.yml` — dort steckt die Erfahrung mit
+`.github/workflows/moosburg-eu.yml`, gebaut nach dem Muster von
+`datahub/.github/workflows/moosburg-eu.yml` — dort steckt die Erfahrung mit
 diesem Host.
 
 - **Pfad**: Auf moosburg.eu hängt die Karte als Unterpunkt am Data Hub
