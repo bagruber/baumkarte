@@ -4,6 +4,21 @@
 nicht abhaken — die Datei soll kurz bleiben.*
 
 
+## Perspektivisch: fuer Nachnutzung abstrahieren
+
+Benedict, 04.09.2026: Die Baumkarte soll irgendwann nicht mehr nur Moosburg
+zeigen, sondern von anderen Kommunen mit eigenen Daten genutzt werden koennen.
+
+Damit gehoert dieses Repo in die dritte Namensklasse aus `moosburg-eu/UMBAU.md`,
+also **kein `moosburg-`-Praefix**, anders als bei den uebrigen Moosburger
+Anwendungen. Der Name bleibt vorerst `baumkarte`.
+
+Was dafuer aus dem Code muss, ist noch nicht durchgesehen. Sichtbare Kandidaten:
+der Mittelpunkt `CLAT, CLON` und die beiden Bounding-Boxen in
+`etl/fetch_umwelt.py`, der Gebietsschluessel 124018, und die Kachel-Erzeugung in
+`etl/build_tiles.py`. Vermutlich laeuft es auf eine Konfigurationsdatei je
+Kommune hinaus, wie beim Sitzungswerkzeug.
+
 ## Toolchain-Stand
 
 Dieses Repo laeuft seit dem 26.08.2026 auf **pnpm** (nicht npm) und auf der
