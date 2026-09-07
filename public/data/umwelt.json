@@ -1,6 +1,6 @@
 {
-  "stand": "2026-09-05",
-  "abgerufen": "2026-09-06",
+  "stand": "2026-09-06",
+  "abgerufen": "2026-09-07",
   "station": {
     "id": 7075,
     "name": "Elsendorf-Horneck",
@@ -17,12 +17,6 @@
   "quelle": "Deutscher Wetterdienst, Climate Data Center",
   "duerre": {
     "serie": [
-      {
-        "stand": "2026-08-22",
-        "smi": 0.001,
-        "klasse": "außergewöhnliche Dürre",
-        "wiederkehr_jahre": 50
-      },
       {
         "stand": "2026-08-23",
         "smi": 0.001,
@@ -100,6 +94,12 @@
         "smi": 0.006,
         "klasse": "außergewöhnliche Dürre",
         "wiederkehr_jahre": 50
+      },
+      {
+        "stand": "2026-09-05",
+        "smi": 0.006,
+        "klasse": "außergewöhnliche Dürre",
+        "wiederkehr_jahre": 50
       }
     ],
     "zellen": 63,
@@ -108,10 +108,6 @@
   },
   "wasser": {
     "serie": [
-      {
-        "stand": "2026-08-22",
-        "nfk": 60.3
-      },
       {
         "stand": "2026-08-23",
         "nfk": 58.1
@@ -163,6 +159,10 @@
       {
         "stand": "2026-09-04",
         "nfk": 42.6
+      },
+      {
+        "stand": "2026-09-05",
+        "nfk": 40.4
       }
     ],
     "einheit": "% nFK",
