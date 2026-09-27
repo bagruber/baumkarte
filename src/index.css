@@ -2,9 +2,20 @@
 @import "@fontsource-variable/source-serif-4/opsz.css";
 @import "@fontsource-variable/atkinson-hyperlegible-next";
 
+/* MapLibres Stylesheet zuerst, damit die Trimmung weiter unten gewinnt. Lag es
+   im Komponenten-Import, stand es im Bundle hinter unseren Regeln und
+   ueberschrieb sie bei gleicher Spezifitaet. */
+@import "maplibre-gl/dist/maplibre-gl.css";
+
 /* Die Grund-Tokens kommen aus dem gemeinsamen Kanon:
    github.com/bagruber/moosburg-design */
 @import "moosburg-design/css/theme.css";
+
+/* Probe 7C: Zeiger dieser Karte in ihrer Themenfarbe. Eine Stelle, ein Wert.
+   Ersatz 7A: --zeiger: var(--color-red-700); */
+:root {
+  --zeiger: var(--color-thema-tannengruen);
+}
 
 @theme {
   /* App-eigene Töne der Kartenplatte. */
@@ -22,37 +33,24 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Versal-Playfair wie in den Geschwisterprojekten */
-.headline {
-  font-family: var(--font-display);
-  text-transform: uppercase;
-  letter-spacing: 0.01em;
-  font-weight: 700;
-  line-height: 1.05;
-}
-
-/* Kicker ueber der Headline, Familiensatz */
-.eyebrow {
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
+/* Beschriftung an einem Instrument: Satzschreibung, 13 px, halbfett. Der
+   Titel steht seit der Formsprache-Probe im Band, nicht mehr hier. */
+.mess-label {
+  font-size: 13px;
   font-weight: 600;
-  font-size: 0.7rem;
-}
-
-/* Beschriftung an einem Messwert. Bewusst kleiner und grau statt farbig:
-   der Kicker benennt die Karte, das Label benennt ein Instrument. */
-.label {
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-weight: 600;
-  font-size: 0.6rem;
-  color: var(--color-ink-muted);
+  color: var(--color-ink-soft);
 }
 
 :where(a, button, select, textarea):focus-visible {
   outline: 2px solid var(--color-red-500);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
+}
+
+/* Hoehe des Blatts am Telefon. Der Standort-Knopf haengt daran und wandert
+   mit, wenn das Blatt aufgezogen wird. */
+:root {
+  --blatt-hoehe: 0px;
 }
 
 /* Hoehenregler als Messinstrument: 2px-Lineal, schmaler Schieber */
@@ -79,14 +77,14 @@ body {
   margin-top: -7px;
   border: 0;
   border-radius: 1px;
-  background: #14522a;
+  background: var(--zeiger);
 }
 .rule-slider::-moz-range-thumb {
   width: 6px;
   height: 16px;
   border: 0;
   border-radius: 1px;
-  background: #14522a;
+  background: var(--zeiger);
 }
 .rule-slider:focus-visible::-webkit-slider-thumb {
   outline: 2px solid var(--color-red-600);
@@ -95,14 +93,6 @@ body {
 .rule-slider:focus-visible::-moz-range-thumb {
   outline: 2px solid var(--color-red-600);
   outline-offset: 2px;
-}
-
-/* Zeitstrahl der Duerre — Schieber im Duerrerot statt im Baumgruen */
-.rule-slider--duerre::-webkit-slider-thumb {
-  background: #6d0818;
-}
-.rule-slider--duerre::-moz-range-thumb {
-  background: #6d0818;
 }
 
 /* Scrollbalken im Papierton, nicht im System-Blau */
@@ -124,16 +114,16 @@ body {
   background: var(--color-gold-600);
 }
 
-/* MapLibre-Chrome auf Papier trimmen: eckig, Haarlinie, Cremegrund */
+/* MapLibre-Chrome auf Papier trimmen: Haarlinie, Cremegrund, 4 px Ecken */
 .maplibregl-ctrl-group {
   background: var(--color-cream);
   border: 1px solid var(--color-ink-frame);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-soft);
 }
 .maplibregl-ctrl-group button {
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
 }
 .maplibregl-ctrl-group button + button {
   border-top: 1px solid var(--color-ink-line);
@@ -141,19 +131,60 @@ body {
 .maplibregl-ctrl-group button:hover {
   background: var(--color-cream-dark);
 }
+
+/* Die Kartenknoepfe kommen als eigene Gruppe mit Phosphor-Zeichen, die
+   Ortung steuert weiter MapLibres GeolocateControl. Deren eigene Knopfleiste
+   wird deshalb nicht gezeigt. */
+.maplibregl-ctrl-top-right {
+  display: none;
+}
+
+/* Massstab als Meterstab, wie ihn gedruckte Karten tragen: vier gleich breite
+   Felder im Wechsel Tinte und Creme unter der Strecke. MapLibre setzt Breite
+   und Text des Elements, die Felder entstehen hier als Hintergrund in Prozent.
+   Keine Flaeche dahinter, nur ein Hof in Creme gegen dunkle Kartenstellen. */
 .maplibregl-ctrl-scale {
-  background: var(--color-cream);
-  border: 1px solid var(--color-ink-frame);
-  border-radius: var(--radius-sm);
+  position: relative;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0 0 8px;
   color: var(--color-ink-soft);
   font-family: var(--font-sans);
-  font-size: 0.65rem;
-  font-variant-numeric: tabular-nums;
-  padding: 0 4px;
+  font-size: 12px;
+  line-height: 1;
+  font-variant-numeric: lining-nums tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+  text-shadow:
+    0 0 2px var(--color-cream),
+    0 0 4px var(--color-cream),
+    0 0 6px var(--color-cream);
+}
+.maplibregl-ctrl-scale::before {
+  content: "0";
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+.maplibregl-ctrl-scale::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 5px;
+  border: 1px solid var(--color-ink);
+  box-shadow: 0 0 0 1px rgb(250 247 242 / 0.85);
+  background: linear-gradient(
+    90deg,
+    var(--color-ink) 0 25%,
+    var(--color-cream) 25% 50%,
+    var(--color-ink) 50% 75%,
+    var(--color-cream) 75%
+  );
 }
 .maplibregl-ctrl-attrib {
   font-family: var(--font-sans);
-  font-size: 0.65rem;
+  font-size: 12px;
   border-radius: 0;
 }
 .maplibregl-ctrl-attrib.maplibregl-compact {
@@ -166,7 +197,7 @@ body {
   background: var(--color-cream);
   color: var(--color-ink);
   border: 1px solid var(--color-ink-frame);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-lift);
   padding: 0.5rem 0.7rem;
 }
@@ -181,6 +212,42 @@ body {
 }
 .maplibregl-popup-anchor-right .maplibregl-popup-tip {
   border-left-color: var(--color-cream);
+}
+
+/* Erstes Laden: drei Kacheln mit Rosen, wie der RoseLoader im Stadt-Konzept.
+   Nachladen: dieselbe Rose, nur drehend, an der Stelle der Kennzahl. */
+@keyframes rose-tile-pulse {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  20% {
+    transform: translateY(-6px) scale(1.05);
+  }
+  60% {
+    transform: translateY(0) scale(0.96);
+    opacity: 0.55;
+  }
+}
+.rose-tile {
+  animation: rose-tile-pulse 1.6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+.rose-tile:nth-child(2) {
+  animation-delay: 200ms;
+}
+.rose-tile:nth-child(3) {
+  animation-delay: 400ms;
+}
+
+@keyframes rose-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.rose-spin {
+  animation: rose-spin 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  transform-origin: center;
 }
 
 @media (prefers-reduced-motion: reduce) {

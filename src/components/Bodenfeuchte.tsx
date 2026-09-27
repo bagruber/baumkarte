@@ -1,3 +1,4 @@
+import { alsDatum } from "./Plate";
 import {
   KLASSEN,
   WASSER_STUFEN,
@@ -79,7 +80,6 @@ export function Bodenfeuchte({
   // Beide Quellen haben eigene Zeitachsen: Die nFK-Datei reicht meist
   // ein bis zwei Tage weiter als der Duerreindex.
   const stand = zeigtWasser ? (tageWasser[index] ?? wasserTag?.stand ?? "") : smiTag.stand;
-  const [, month, day] = stand.split("-");
   const istLetzterTag = index >= serie.length - 1;
 
   const klasse = sicht ? smiKlasse(sicht.wert) : { name: smiTag.klasse, wiederkehr: smiTag.wiederkehr_jahre };
@@ -88,11 +88,9 @@ export function Bodenfeuchte({
   return (
     <div className="mt-3.5">
       <div className="flex items-baseline justify-between gap-2">
-        <p className="label">{zeigtWasser ? "Wasser im Boden" : "Boden im Ausschnitt"}</p>
-        {day && (
-          <p className="text-[0.62rem] tabular-nums text-ink-muted">
-            {day}.{month}.
-          </p>
+        <p className="mess-label">{zeigtWasser ? "Wasser im Boden" : "Boden im Ausschnitt"}</p>
+        {stand && (
+          <p className="text-[12px] tabular-nums lining-nums text-ink-muted">{alsDatum(stand)}</p>
         )}
       </div>
 
@@ -112,7 +110,7 @@ export function Bodenfeuchte({
         ))}
       </div>
       {/* Immer gerendert, damit der Schalter beim Umlegen nicht wandert */}
-      <div className="mt-0.5 flex justify-between text-[0.55rem] uppercase tracking-[0.1em] text-ink-muted">
+      <div className="mt-0.5 flex justify-between text-[12px] text-ink-muted">
         <span>{zeigtWasser ? "trocken" : "mild"}</span>
         <span>{sicht ? `${sicht.zellen} ${sicht.zellen === 1 ? "Karo" : "Karos"}` : "4-km-Raster"}</span>
         <span>{zeigtWasser ? "feucht" : "schwer"}</span>
@@ -123,19 +121,19 @@ export function Bodenfeuchte({
       <div className="mt-1 min-h-[2.7rem]">
         {zeigtWasser ? (
           <>
-            <p className="text-[0.7rem] font-semibold leading-snug text-red-700">
+            <p className="text-[13px] font-semibold leading-snug text-red-700">
               {wasserWert != null
                 ? `${wasserWert.toFixed(0)} % nutzbare Feldkapazität`
                 : "keine Daten"}
             </p>
-            <p className="text-[0.62rem] leading-snug text-ink-muted">
+            <p className="text-[12px] leading-snug text-ink-muted">
               pflanzenverfügbares Wasser, oberste 25&thinsp;cm
             </p>
           </>
         ) : (
           <>
-            <p className="text-[0.7rem] font-semibold leading-snug text-red-700">{klasse.name}</p>
-            <p className="text-[0.62rem] leading-snug text-ink-muted">
+            <p className="text-[13px] font-semibold leading-snug text-red-700">{klasse.name}</p>
+            <p className="text-[12px] leading-snug text-ink-muted">
               {klasse.wiederkehr ? `sonst nur alle ${klasse.wiederkehr} Jahre so trocken` : ""}
               {istLetzterTag && (
                 <>
@@ -151,17 +149,17 @@ export function Bodenfeuchte({
       </div>
 
       <div className="mt-2 flex items-baseline justify-between gap-2">
-        <label htmlFor="duerre-tag" className="label">
+        <label htmlFor="duerre-tag" className="mess-label">
           Zeitraum
         </label>
-        <span className="text-[0.62rem] tabular-nums text-ink-muted">
+        <span className="text-[12px] tabular-nums lining-nums text-ink-muted">
           {stand ? abstandZuHeute(stand) : ""}
         </span>
       </div>
       <input
         id="duerre-tag"
         type="range"
-        className="rule-slider rule-slider--duerre mt-0.5"
+        className="rule-slider mt-0.5"
         min={0}
         max={serie.length - 1}
         step={1}
@@ -170,17 +168,17 @@ export function Bodenfeuchte({
       />
 
       <div className="mt-2 flex items-center gap-2">
-        <span className="label">Fläche</span>
-        <div className="flex flex-1 overflow-hidden rounded-sm border border-ink-line">
+        <span className="mess-label">Fläche</span>
+        <div className="flex flex-1 gap-0.5 rounded-xl bg-cream-dark p-0.5">
           {WAHL.map((w) => (
             <button
               key={w.wert}
               onClick={() => onFlaecheChange(w.wert)}
               aria-pressed={flaeche === w.wert}
-              className={`flex-1 px-1 py-0.5 text-[0.68rem] font-semibold transition-colors ${
+              className={`flex-1 rounded-lg px-2 py-1 text-[13px] transition-colors ${
                 flaeche === w.wert
-                  ? "bg-ink text-cream"
-                  : "bg-cream text-ink-soft hover:bg-cream-dark hover:text-ink"
+                  ? "bg-white font-semibold text-ink shadow-[0_1px_2px_rgb(0_0_0/0.1)]"
+                  : "text-ink-soft hover:text-ink"
               }`}
             >
               {w.text}

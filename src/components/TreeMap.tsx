@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import type { StyleSpecification } from "maplibre-gl";
 import { Protocol } from "pmtiles";
-import "maplibre-gl/dist/maplibre-gl.css";
+import { Crosshair, Minus, Plus } from "@phosphor-icons/react";
 import { HEIGHT_STOPS } from "@/lib/ramp";
+import { papierton } from "@/lib/papierton";
 import { duerreColor, wasserColor, type Ausschnitt, type Flaeche } from "@/lib/umwelt";
 
 /** Datenausdehnung des Projektgebiets 124018 (aus dem PMTiles-Header). */
@@ -15,19 +16,28 @@ const DATA_BOUNDS: [[number, number], [number, number]] = [
 const BASEMAP_STYLE =
   "https://sgx.geodatenzentrum.de/gdz_basemapde_vektor/styles/bm_web_gry.json";
 
-/** Rueckfallebene, falls basemap.de nicht erreichbar ist. */
-const FALLBACK_STYLE: StyleSpecification = {
+/**
+ * Rueckfallebene, falls basemap.de nicht erreichbar ist: die graue
+ * TopPlusOpen des BKG. Sie bleibt ungetoent — ein Raster laesst sich nicht
+ * kanalweise multiplizieren, ohne ihn durch einen Filter zu schicken, und
+ * grau auf Creme steht dem Papierton ohnehin nahe. Frueher standen hier die
+ * bunten OSM-Kacheln, die neben den Baumgruen-Punkten laut wurden.
+ */
+const TOPPLUS_STYLE: StyleSpecification = {
   version: 8,
   sources: {
-    osm: {
+    topplus: {
       type: "raster",
-      tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+      tiles: [
+        "https://sgx.geodatenzentrum.de/wmts_topplus_open/tile/1.0.0/web_grau/default/WEBMERCATOR/{z}/{y}/{x}.png",
+      ],
       tileSize: 256,
-      attribution: "© OpenStreetMap-Mitwirkende",
     },
   },
-  layers: [{ id: "osm", type: "raster", source: "osm" }],
+  layers: [{ id: "topplus", type: "raster", source: "topplus" }],
 };
+
+export type Grundkarte = "basemap" | "topplus";
 
 const heightColor = [
   "interpolate",
@@ -47,21 +57,34 @@ export function TreeMap({
   flaeche,
   tagIndex,
   onBoundsChange,
+  onGrundkarte,
+  onBereit,
 }: {
   minHeight: number;
   flaeche: Flaeche;
   tagIndex: number;
   onBoundsChange: (b: Ausschnitt) => void;
+  onGrundkarte: (g: Grundkarte) => void;
+  onBereit: () => void;
 }) {
   const boundsCb = useRef(onBoundsChange);
   boundsCb.current = onBoundsChange;
+  const grundCb = useRef(onGrundkarte);
+  grundCb.current = onGrundkarte;
+  const bereitCb = useRef(onBereit);
+  bereitCb.current = onBereit;
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const ortung = useRef<maplibregl.GeolocateControl | null>(null);
   const flaecheRef = useRef(flaeche);
   flaecheRef.current = flaeche;
   const tagRef = useRef(tagIndex);
   tagRef.current = tagIndex;
-  const [loaded, setLoaded] = useState(false);
+  // Zoomknoepfe nur mit Maus: am Telefon zoomt man mit zwei Fingern, und die
+  // Knoepfe verstellen dort nur die Kartenflaeche (Formsprache-Probe, Punkt 9).
+  const [maus] = useState(
+    () => window.matchMedia("(hover: hover) and (pointer: fine)").matches,
+  );
 
   useEffect(() => {
     const map = mapRef.current;
@@ -105,21 +128,27 @@ export function TreeMap({
     let cancelled = false;
 
     (async () => {
-      const style: StyleSpecification | string = await fetch(BASEMAP_STYLE)
-        .then((r) => (r.ok ? r.json() : FALLBACK_STYLE))
-        .catch(() => FALLBACK_STYLE);
+      // Der Stil kommt als JSON herein und geht getoent weiter: jede
+      // Farbangabe kanalweise mit Creme multipliziert.
+      const style: StyleSpecification = await fetch(BASEMAP_STYLE)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((j) => (j ? papierton(j as StyleSpecification) : TOPPLUS_STYLE))
+        .catch(() => TOPPLUS_STYLE);
       if (cancelled || !container.current) return;
+      grundCb.current(style === TOPPLUS_STYLE ? "topplus" : "basemap");
 
-      // Startausschnitt so einpassen, dass der Randblock keine Daten verdeckt
-      const wide = window.innerWidth >= 640;
+      // Ab lg steht die Leiste als eigene Spalte neben der Karte, die Karte
+      // braucht dort kein Polster mehr. Am Telefon deckt das Blatt die untere
+      // Kante ab.
+      const breit = window.innerWidth >= 1024;
       map = new maplibregl.Map({
         container: container.current,
         style,
         bounds: DATA_BOUNDS,
         fitBoundsOptions: {
-          padding: wide
-            ? { top: 24, right: 24, bottom: 24, left: 340 }
-            : { top: 24, right: 24, bottom: 310, left: 24 },
+          padding: breit
+            ? { top: 24, right: 24, bottom: 24, left: 24 }
+            : { top: 24, right: 24, bottom: 180, left: 24 },
         },
         minZoom: 8,
         maxZoom: 19,
@@ -132,7 +161,7 @@ export function TreeMap({
       });
       mapRef.current = map;
       map.once("idle", () => {
-        if (!cancelled) setLoaded(true);
+        if (!cancelled) bereitCb.current();
       });
 
       // Die Duerreanzeige folgt dem, was man sieht: beim Hineinzoomen
@@ -149,15 +178,15 @@ export function TreeMap({
       };
       map.on("moveend", meldeAusschnitt);
       map.once("load", meldeAusschnitt);
-      map.addControl(new maplibregl.NavigationControl({ showCompass: false }));
-      map.addControl(
-        new maplibregl.GeolocateControl({
-          positionOptions: { enableHighAccuracy: true },
-        }),
-      );
-      // mobil deckt der Randblock die untere Kante ab, dort waere der
-      // Massstab verdeckt
-      map.addControl(new maplibregl.ScaleControl(), wide ? "bottom-right" : "top-left");
+      // Die Ortung steuert weiter MapLibre, die Knoepfe stehen als eigene
+      // Gruppe daneben — nur so tragen sie die Zeichen der Familie.
+      ortung.current = new maplibregl.GeolocateControl({
+        positionOptions: { enableHighAccuracy: true },
+      });
+      map.addControl(ortung.current);
+      // Meterstab: ab lg unten links neben der Leiste, darunter oben links
+      // unter dem Band.
+      map.addControl(new maplibregl.ScaleControl(), breit ? "bottom-left" : "top-left");
 
       map.on("load", () => {
         if (!map) return;
@@ -293,13 +322,14 @@ export function TreeMap({
           const f = features[0];
           if (!f || f.geometry.type !== "Point") return;
           const { h, g } = f.properties as { h: number; g: number };
+          // Bis zwei Werte ein Zettel am Punkt, mehr gehoerte ins Blatt.
           new maplibregl.Popup({ closeButton: false, offset: 10, maxWidth: "240px" })
             .setLngLat(f.geometry.coordinates as [number, number])
             .setHTML(
-              `<div style="font-variant-numeric:tabular-nums">` +
+              `<div style="font-variant-numeric:lining-nums tabular-nums">` +
                 `<div style="font-size:1.05rem;font-weight:600;line-height:1.15">${h.toLocaleString("de-DE", { maximumFractionDigits: 1 })}&thinsp;m</div>` +
-                `<div style="font-size:0.6rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#6f6b63;margin-top:2px">Baumhöhe</div>` +
-                `<div style="margin-top:6px;padding-top:5px;border-top:1px solid #e4e0d7;font-size:0.72rem;color:#555555">Gelände ${Math.round(g).toLocaleString("de-DE")}&thinsp;m ü.&thinsp;NHN</div>` +
+                `<div style="font-size:12px;font-weight:600;color:#555555;margin-top:2px">Baumhöhe</div>` +
+                `<div style="margin-top:6px;padding-top:5px;border-top:1px solid #e4e0d7;font-size:12px;color:#555555">Gelände ${Math.round(g).toLocaleString("de-DE")}&thinsp;m ü.&thinsp;NHN</div>` +
                 `</div>`,
             )
             .addTo(map);
@@ -317,6 +347,7 @@ export function TreeMap({
       cancelled = true;
       map?.remove();
       mapRef.current = null;
+      ortung.current = null;
       maplibregl.removeProtocol("pmtiles");
     };
   }, []);
@@ -326,15 +357,53 @@ export function TreeMap({
   return (
     <div className="absolute inset-0">
       <div ref={container} className="h-full w-full" aria-label="Karte der Einzelbäume" />
-      {!loaded && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="pointer-events-none absolute inset-0 grid place-items-center"
-        >
-          <p className="eyebrow text-red-700">Karte wird geladen …</p>
+
+      {maus ? (
+        <div className="absolute right-3 top-3 z-10 flex flex-col overflow-hidden rounded-md border border-ink-frame bg-cream shadow-soft">
+          <Kartenknopf label="Hineinzoomen" onClick={() => mapRef.current?.zoomIn()}>
+            <Plus size={17} aria-hidden />
+          </Kartenknopf>
+          <Kartenknopf label="Herauszoomen" onClick={() => mapRef.current?.zoomOut()}>
+            <Minus size={17} aria-hidden />
+          </Kartenknopf>
+          <Kartenknopf label="Meinen Standort zeigen" onClick={() => ortung.current?.trigger()}>
+            <Crosshair size={17} aria-hidden />
+          </Kartenknopf>
         </div>
+      ) : (
+        // Am Daumen statt am Rand: der Standort-Knopf sitzt ueber dem Blatt
+        // und wandert mit, wenn es aufgezogen wird.
+        <button
+          type="button"
+          aria-label="Meinen Standort zeigen"
+          onClick={() => ortung.current?.trigger()}
+          style={{ bottom: "calc(var(--blatt-hoehe) + 12px)" }}
+          className="absolute right-3 z-10 grid h-[42px] w-[42px] place-items-center rounded-xl border border-ink-frame bg-cream text-ink shadow-soft"
+        >
+          <Crosshair size={20} aria-hidden />
+        </button>
       )}
     </div>
+  );
+}
+
+function Kartenknopf({
+  label,
+  onClick,
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      onClick={onClick}
+      className="grid h-[34px] w-[34px] place-items-center text-ink hover:bg-cream-dark [&+&]:border-t [&+&]:border-ink-line"
+    >
+      {children}
+    </button>
   );
 }

@@ -1,12 +1,28 @@
 import { useState } from "react";
+import { CaretDown } from "@phosphor-icons/react";
 import { Bodenfeuchte } from "./Bodenfeuchte";
 import { HEIGHT_MAX, HEIGHT_MIN, HEIGHT_STOPS, rampGradient } from "@/lib/ramp";
+import type { Grundkarte } from "./TreeMap";
 import type { Ausschnitt, Flaeche, Umwelt, Zelle } from "@/lib/umwelt";
 
-const TREE_COUNT = 2_868_813;
 const FILTER_MAX = 40;
 
-/** Randblock des Kartenblatts: Titel, Hoehenskala, Regler, Quellenvermerk. */
+const MONATE = [
+  "Januar", "Februar", "März", "April", "Mai", "Juni",
+  "Juli", "August", "September", "Oktober", "November", "Dezember",
+];
+
+/** „2026-09-21" zu „21. September". */
+export function alsDatum(iso: string): string {
+  const [, monat, tag] = iso.split("-");
+  return `${Number(tag)}. ${MONATE[Number(monat) - 1] ?? ""}`;
+}
+
+/**
+ * Das Instrument zur Karte. Ab lg eine angedockte Leiste links unter dem Band,
+ * darunter ein Blatt von unten, das in Ruhe genau die Hoehenskala und den
+ * Mindesthoehen-Regler zeigt (Formsprache-Probe, Punkt 4).
+ */
 export function Plate({
   minHeight,
   onMinHeightChange,
@@ -18,6 +34,9 @@ export function Plate({
   onTagChange,
   flaeche,
   onFlaecheChange,
+  grundkarte,
+  aufgezogen,
+  onAufgezogen,
 }: {
   minHeight: number;
   onMinHeightChange: (v: number) => void;
@@ -29,28 +48,32 @@ export function Plate({
   onTagChange: (i: number) => void;
   flaeche: Flaeche;
   onFlaecheChange: (f: Flaeche) => void;
+  grundkarte: Grundkarte;
+  aufgezogen: boolean;
+  onAufgezogen: (a: boolean) => void;
 }) {
-  // Mobil hat die Platte eine feste Hoehe statt mitzuwachsen: So verschiebt
-  // das Ausklappen der Erlaeuterung nichts, was darueber steht — der Block
-  // ist ohnehin scrollbar. Am Desktop haengt sie oben und waechst nach unten.
+  // Die Erlaeuterung klappt innerhalb des Blatts auf. Weil das Blatt in
+  // beiden Zustaenden eine feste Hoehe hat und selbst scrollt, verschiebt das
+  // nichts, was darueber steht.
   const [notesOpen, setNotesOpen] = useState(false);
   const filtered = minHeight > HEIGHT_MIN;
   // Belegt, dass der Tageslauf laeuft, auch wenn die Quellen nachhinken
-  const abruf = umwelt?.abgerufen?.split("-");
+  const abruf = umwelt?.abgerufen;
   const maskPercent = ((minHeight - HEIGHT_MIN) / (HEIGHT_MAX - HEIGHT_MIN)) * 100;
 
   return (
-    <section className="plate-scroll absolute inset-x-0 bottom-0 z-10 h-[52dvh] overflow-y-auto rounded-t-sm border-t border-ink-frame bg-cream px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-2px_12px_rgb(0_0_0/0.07)] sm:inset-x-auto sm:bottom-auto sm:left-4 sm:top-4 sm:h-auto sm:max-h-[calc(100dvh-2rem)] sm:w-[19.5rem] sm:rounded-sm sm:border sm:px-4 sm:pt-4 sm:pb-4 sm:shadow-soft">
-      <p className="eyebrow text-red-700">Moosburg an der Isar</p>
-      <h1 className="headline mt-1 text-[1.35rem] sm:text-[1.5rem]">Baumkarte</h1>
-      <p className="mt-1.5 mb-3 text-[0.75rem] tabular-nums text-ink-soft">
-        {TREE_COUNT.toLocaleString("de-DE")} Einzelbäume
-      </p>
+    <section className="plate-scroll absolute inset-x-0 bottom-0 z-20 h-[var(--blatt-hoehe)] overflow-y-auto rounded-t-xl border-t border-ink-frame bg-cream px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-4px_18px_rgb(0_0_0/0.08)] lg:static lg:z-auto lg:h-auto lg:w-[25rem] lg:shrink-0 lg:rounded-none lg:border-t-0 lg:border-r lg:border-ink-frame lg:px-5 lg:pt-4 lg:pb-5 lg:shadow-none">
+      <button
+        type="button"
+        aria-expanded={aufgezogen}
+        onClick={() => onAufgezogen(!aufgezogen)}
+        className="sticky top-0 -mx-4 flex w-[calc(100%+2rem)] justify-center bg-cream pt-2 pb-3 lg:hidden"
+      >
+        <span aria-hidden className="h-1 w-9 rounded-full bg-ink-frame" />
+        <span className="sr-only">{aufgezogen ? "Blatt schließen" : "Blatt aufziehen"}</span>
+      </button>
 
-      {/* Goldregel als Blattkante — greift die Blattschnitt-Linie der Karte auf */}
-      <div className="-mx-4 h-[2px] bg-gold-500" />
-
-      <p className="label mt-3">Baumhöhe in Meter</p>
+      <p className="mess-label">Baumhöhe in Meter</p>
       <div
         className="relative mt-1.5 h-2 border border-ink-line"
         style={{ background: rampGradient }}
@@ -64,17 +87,17 @@ export function Plate({
           />
         )}
       </div>
-      <div className="mt-1 flex justify-between text-[0.62rem] tabular-nums text-ink-muted">
+      <div className="mt-1 flex justify-between text-[12px] tabular-nums lining-nums text-ink-muted">
         {HEIGHT_STOPS.map(([h]) => (
           <span key={h}>{h}</span>
         ))}
       </div>
 
       <div className="mt-3.5 flex items-baseline justify-between gap-2">
-        <label htmlFor="min-height" className="label">
+        <label htmlFor="min-height" className="mess-label">
           Mindesthöhe
         </label>
-        <span className="text-[0.8rem] font-semibold tabular-nums text-ink">
+        <span className="text-[13px] font-semibold tabular-nums lining-nums text-ink">
           {filtered ? `ab ${minHeight} m` : "alle Bäume"}
         </span>
       </div>
@@ -105,29 +128,14 @@ export function Plate({
       <button
         onClick={() => setNotesOpen(!notesOpen)}
         aria-expanded={notesOpen}
-        className="flex w-full items-center justify-between gap-2 pt-2.5 text-left text-[0.72rem] font-semibold text-ink-soft hover:text-ink"
+        className="flex w-full items-center justify-between gap-2 pt-2.5 text-left text-[13px] font-semibold text-ink-soft hover:text-ink"
       >
         Woher die Daten kommen
-        <svg
-          width="9"
-          height="6"
-          viewBox="0 0 9 6"
-          fill="none"
-          aria-hidden
-          className={notesOpen ? "rotate-180" : ""}
-        >
-          <path
-            d="M1 1.5 4.5 5 8 1.5"
-            stroke="currentColor"
-            strokeWidth="1.3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        <CaretDown size={14} aria-hidden className={notesOpen ? "rotate-180" : ""} />
       </button>
 
       {notesOpen && (
-        <div className="mt-2 space-y-2 text-[0.75rem] leading-relaxed text-ink-soft">
+        <div className="mt-2 space-y-2 text-[13px] leading-relaxed text-ink-soft">
           <p>
             Jeder Punkt ist ein Baum. Die Farbe steht für seine Höhe, Antippen
             zeigt die Zahlen.
@@ -176,30 +184,20 @@ export function Plate({
             Beide Werte beschreiben die Lage in der Gegend, nicht den Zustand
             eines einzelnen Baums.
           </p>
-          <p className="text-[0.7rem] text-ink-muted">
-            Private Eigenentwicklung, kein Angebot der Stadt. Kein Tracking.{" "}
-            <a
-              href="https://github.com/bagruber/baumkarte/issues"
-              target="_blank"
-              rel="noreferrer"
-              className="font-semibold text-red-700 underline decoration-ink-line underline-offset-2 hover:decoration-red-700"
-            >
-              Feedback
-            </a>
-          </p>
         </div>
       )}
 
       {abruf && (
-        <p className="mt-2.5 text-[0.62rem] leading-snug text-ink-muted">
-          Täglich abgerufen, zuletzt {abruf[2]}.{abruf[1]}. Der Stand der
+        <p className="mt-2.5 text-[12px] leading-snug text-ink-muted">
+          Täglich abgerufen, zuletzt am {alsDatum(abruf)}. Der Stand der
           Quellen liegt ein bis zwei Tage zurück.
         </p>
       )}
-      <p className="mt-1 text-[0.62rem] leading-snug text-ink-muted">
-        Bäume: Bayerische Vermessungsverwaltung (CC&nbsp;BY&nbsp;4.0) · Karte:
-        basemap.de / BKG · Dürre: UFZ-Dürremonitor /
-        Helmholtz-Zentrum&nbsp;für&nbsp;Umweltforschung · Bodenwasser: DWD
+      <p className="mt-1 text-[12px] leading-snug text-ink-muted">
+        Bäume: Bayerische Vermessungsverwaltung (CC&nbsp;BY&nbsp;4.0) · Karte:{" "}
+        {grundkarte === "basemap" ? "basemap.de / BKG" : "TopPlusOpen / BKG"} ·
+        Dürre: UFZ-Dürremonitor / Helmholtz-Zentrum&nbsp;für&nbsp;Umweltforschung ·
+        Bodenwasser: DWD
       </p>
     </section>
   );
