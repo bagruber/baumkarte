@@ -14,19 +14,20 @@
   "dependencies": {
     "@fontsource-variable/atkinson-hyperlegible-next": "^5.3.0",
     "@fontsource-variable/source-serif-4": "^5.3.0",
+    "@phosphor-icons/react": "^2.1.10",
     "maplibre-gl": "^5.0.0",
     "moosburg-design": "github:bagruber/moosburg-design",
     "pmtiles": "^4.3.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.0.0",
+    "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^26.3.0",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
     "@vitejs/plugin-react": "^6.1.0",
-    "tailwindcss": "^4.0.0",
+    "tailwindcss": "^4.3.3",
     "typescript": "~7.0.2",
     "vite": "^8.2.2"
   }
