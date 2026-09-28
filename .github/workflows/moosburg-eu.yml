@@ -28,7 +28,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     # Ein gescheiterter Umweltlauf soll nicht den alten Stand neu hochladen.
-    if: github.event_name != workflow_run || github.event.workflow_run.conclusion == success
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
