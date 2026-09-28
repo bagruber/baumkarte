@@ -53,7 +53,7 @@ function Stripe() {
  * Punkt 1 bis 3). Das Band traegt die Themenfarbe der Karte; der Titel steht
  * hier und nicht mehr im Blatt.
  *
- * Die Kennzahl erscheint erst, wenn die Karte steht — vorher stuende dort eine
+ * Die Kennzahl erscheint erst, wenn die Karte steht. Vorher stuende dort eine
  * Zahl ueber einer leeren Flaeche.
  */
 export function Kopf({

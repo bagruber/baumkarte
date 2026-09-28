@@ -20,16 +20,15 @@ describe("toene", () => {
 
   it("behaelt das Alpha", () => {
     expect(toene("rgba(255, 255, 255, 0.4)")).toBe("rgba(250, 247, 242, 0.4)");
-    expect(toene("hsla(0, 0%, 100%, 0.25)")).toBe("rgba(250, 247, 242, 0.25)");
   });
 
-  it("versteht hsl und gibt rgb zurueck", () => {
-    expect(toene("hsl(0, 0%, 100%)")).toBe("rgb(250, 247, 242)");
-    expect(toene("hsl(120, 100%, 50%)")).toBe("rgb(0, 247, 0)");
+  it("nimmt die Schreibweise von basemap.de ohne Leerzeichen", () => {
+    expect(toene("rgb(255,255,255)")).toBe("rgb(250, 247, 242)");
+    expect(toene("rgb(102,102,102)")).toBe("rgb(100, 99, 97)");
   });
 
   it("laesst alles in Ruhe, was keine Farbe ist", () => {
-    for (const wert of ["interpolate", "linear", "get", "strasse", "#zu-lang-fuer-hex", ""]) {
+    for (const wert of ["interpolate", "linear", "get", "strasse", "#zu-lang-fuer-hex", "hsl(0, 0%, 100%)", ""]) {
       expect(toene(wert)).toBe(wert);
     }
   });
