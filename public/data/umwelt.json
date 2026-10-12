@@ -1,13 +1,13 @@
 {
-  "stand": "2026-10-10",
-  "abgerufen": "2026-10-11",
+  "stand": "2026-10-11",
+  "abgerufen": "2026-10-12",
   "station": {
     "id": 7075,
     "name": "Elsendorf-Horneck",
     "entfernung_km": 24
   },
   "bodenfeuchte": {
-    "aktuell": 20,
+    "aktuell": 21,
     "referenz": 95,
     "referenz_zeitraum": "2005–2025",
     "trockenere_vergleichstage": 0,
