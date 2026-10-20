@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState } from "react";
-import maplibregl from "maplibre-gl";
+import * as maplibregl from "maplibre-gl";
 import type { StyleSpecification } from "maplibre-gl";
+import maplibreWorker from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import { Protocol } from "pmtiles";
 import { Crosshair, Minus, Plus } from "@phosphor-icons/react";
 import { HEIGHT_STOPS } from "@/lib/ramp";
 import { papierton } from "@/lib/papierton";
 import { duerreColor, wasserColor, type Ausschnitt, type Flaeche } from "@/lib/umwelt";
+
+// MapLibre 6 laedt seinen Worker als eigenes Modul. Ohne die gebuendelte URL
+// findet der Vite-Build ihn nicht, und die Karte bleibt leer.
+maplibregl.setWorkerUrl(maplibreWorker);
 
 /** Datenausdehnung des Projektgebiets 124018 (aus dem PMTiles-Header). */
 const DATA_BOUNDS: [[number, number], [number, number]] = [
