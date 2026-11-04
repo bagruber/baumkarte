@@ -1,6 +1,6 @@
 {
-  "stand": "2026-11-02",
-  "abgerufen": "2026-11-03",
+  "stand": "2026-11-03",
+  "abgerufen": "2026-11-04",
   "station": {
     "id": 7075,
     "name": "Elsendorf-Horneck",
@@ -8,9 +8,9 @@
   },
   "bodenfeuchte": {
     "aktuell": 41,
-    "referenz": 101,
+    "referenz": 102,
     "referenz_zeitraum": "2005–2025",
-    "trockenere_vergleichstage": 2,
+    "trockenere_vergleichstage": 1,
     "vergleichstage": 315,
     "einheit": "% nFK"
   },
