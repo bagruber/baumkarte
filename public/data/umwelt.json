@@ -1,6 +1,6 @@
 {
-  "stand": "2026-11-03",
-  "abgerufen": "2026-11-04",
+  "stand": "2026-11-04",
+  "abgerufen": "2026-11-05",
   "station": {
     "id": 7075,
     "name": "Elsendorf-Horneck",
@@ -10,7 +10,7 @@
     "aktuell": 41,
     "referenz": 102,
     "referenz_zeitraum": "2005–2025",
-    "trockenere_vergleichstage": 1,
+    "trockenere_vergleichstage": 0,
     "vergleichstage": 315,
     "einheit": "% nFK"
   },
