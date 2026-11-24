@@ -39,6 +39,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm test
       - run: pnpm run build:hostinger
 
       # public/.htaccess wandert mit und ist hier entscheidend: Die Kacheln
